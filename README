@@ -28,7 +28,7 @@ Specifying the key for request
 based on the SHA1 hash of POST body or parameters. However, you can specify the key by passing parameter mock_key.
 
 
-Thank you for downloading TestPlayer. Please send questions or suggestions to bhatti@plexobject.com.
+Thank you for downloading TestPlayer. Please send questions or suggestions to bhatti AT plexobject.com.
 
 This software is released under GNU General Public License. 
 
