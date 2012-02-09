@@ -2,10 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.plexobject.mock.server</groupId>
-	<artifactId>mock-server</artifactId>
+	<artifactId>mock-rest-server</artifactId>
 	<packaging>war</packaging>
 	<version>0.1.0</version>
-	<name>mock-server</name>
+	<name>mock-rest-erver</name>
 	<url>http://maven.apache.org</url>
 
 
