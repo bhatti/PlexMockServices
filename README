@@ -1,0 +1,34 @@
+   *** Mock Rest Service ***
+
+This is a mock service for recording requests and responses to your REST API (or any web sever) and then playback.
+
+Requirements:
+   Java 1.6+
+   Maven
+
+
+Building
+   Checkout code from 
+      git clone git@github.com:bhatti/Mock-Rest-Service.git
+
+   Typing
+      mvn
+
+Running in record mode
+   mvn jetty:run-war -DMOCK_MODE=record -DMOCK_URL_PREFIX=http://myserver -DMOCK_FOLDER=/tmp/mocks
+
+Running in play mode
+   mvn jetty:run-war -DMOCK_MODE=play -DMOCK_URL_PREFIX=http://myserver -DMOCK_FOLDER=/tmp/mocks
+
+Changing mode on the fly
+   As part of HTTP request, you can pass mock_mode parameter with value of 'record' or 'play' for running the request in specific mode.
+
+Specifying the key for request
+   By default all GET requests are stored with a file name that is derived from all URL path and parameters and all POST requests are stored
+based on the SHA1 hash of POST body or parameters. However, you can specify the key by passing parameter mock_key.
+
+
+Thank you for downloading TestPlayer. Please send questions or suggestions to bhatti@plexobject.com.
+
+This software is released under GNU General Public License. 
+

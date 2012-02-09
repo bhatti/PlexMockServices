@@ -1,0 +1,5 @@
+export MAVEN_OPTS=-Xmx512m 
+mvn jetty:run-war -DMOCK_MODE=play
+
+#mvn exec:java -Dexec.mainClass="com."
+
