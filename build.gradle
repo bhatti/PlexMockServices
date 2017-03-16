@@ -1,5 +1,9 @@
 apply plugin: 'war'
+apply plugin: 'org.akhikhl.gretty'
 
+//apply plugin: 'jetty'
+//project.webAppDirName = ''
+//jettyRunWar.contextPath = '/'
 
 allprojects {
     repositories {
@@ -18,10 +22,16 @@ buildscript {
     }
     dependencies {
         classpath 'net.researchgate:gradle-release:2.3.4'
+        classpath 'org.akhikhl.gretty:gretty:+'
     }
 }
 
 apply plugin: 'net.researchgate.release'
+
+gretty {
+    contextPath = '/'
+    servletContainer = 'jetty9'
+}
 
 
 dependencies {
@@ -58,4 +68,5 @@ jar {
     attributes("Class-Path": configurations.compile.collect { it.getName() }.join(' '))
   }
 }
+
 

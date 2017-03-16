@@ -4,10 +4,22 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
                              http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
-    <display-name>Mock Server</display-name>
+    <display-name>PlexMock Server</display-name>
     <servlet>
         <servlet-name>mock_server</servlet-name>
         <servlet-class>com.plexobject.mock.server.Server</servlet-class>
+        <init-param>
+            <param-name>connectionTimeoutMillis</param-name> 
+            <param-value>60000</param-value> 
+        </init-param>
+        <init-param>
+            <param-name>recordMode</param-name> 
+            <param-value>true</param-value> 
+        </init-param>
+        <init-param>
+            <param-name>urlPrefix</param-name> 
+            <param-value>http://localhost:8181</param-value> 
+        </init-param>
         <load-on-startup>1</load-on-startup>
 
     </servlet>
