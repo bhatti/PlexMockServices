@@ -35,6 +35,7 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and offer
             <param-value>http://localhost:8181</param-value> 
         </init-param>
 ```
+Note: It's recommended that you use deploy mock service as root context so mapping of service paths is simple.
 
 ## Testing
 ### Record Mode
@@ -51,7 +52,7 @@ Note: You can specify mockMode as a request parameter or a header parameter.
 ```
 
 ### Specifying the id for request
-   By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter mockId.
+   By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter requestId.
 
 
 Thank you for downloading PlexMockServices. Please send questions or suggestions to bhatti AT plexobject.com.

@@ -32,10 +32,10 @@ import com.plexobject.mock.util.FileUtils;
 import com.plexobject.mock.util.YAMLUtils;
 
 public class Server extends HttpServlet {
+	private static final long serialVersionUID = 1L;
 	private static final String YAML = ".yml";
 	private static final String POST = "POST";
-	private static final String MOCK_ID = "mockId";
-	private static final long serialVersionUID = 1L;
+	private static final String REQUEST_ID = "requestId";
 	private static final String GET = "GET";
 	private static final String RECORD = "record";
 	private static final String MOCK_MODE = "mockMode";
@@ -333,8 +333,8 @@ public class Server extends HttpServlet {
 	private String getRequestId(HttpServletRequest req, final String url,
 			Map<java.lang.String, java.lang.String[]> params, String body) {
 		String id;
-		if (req.getParameter(MOCK_ID) != null) {
-			id = req.getParameter(MOCK_ID);
+		if (req.getParameter(REQUEST_ID) != null) {
+			id = req.getParameter(REQUEST_ID);
 		} else {
 			if (body != null) {
 				id = url + FileUtils.hash(body);
