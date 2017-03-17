@@ -1,6 +1,6 @@
-# PlexMockServices - Mock Services for Proxying into REST SERVICES and offering record/play/canned results.
+# PlexMockServices - Mock Services for REST SERVICES 
 
-This is a mock service for recording requests and responses to your REST API (or any web sever) and then playback.
+PlexMockServices offers a mock service for proxying into REST SERVICES and offering record/play/canned results.
 
 ## Requirements:
 - Java 1.6+
