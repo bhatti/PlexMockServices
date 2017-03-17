@@ -1,24 +1,24 @@
-#PlexMockServices - Mock Services for Proxying into REST SERVICES and offering record/play/canned results.
+# PlexMockServices - Mock Services for Proxying into REST SERVICES and offering record/play/canned results.
 
 This is a mock service for recording requests and responses to your REST API (or any web sever) and then playback.
 
-##Requirements:
+## Requirements:
 - Java 1.6+
 - Gradle
 
-##Version
+## Version
 - 0.1.x
 
-##License
+## License
 - MIT
 
-##Building
+## Building
 - Checkout code from 
 * git clone git@github.com:bhatti/PlexMockServices.git
 - Building
 * gradle compile
 
-##Configuring:
+## Configuring:
 - Edit src/main/webapp/WEB-INF/web.xml 
 * Specify default recordMode
 ```xml
@@ -36,7 +36,7 @@ This is a mock service for recording requests and responses to your REST API (or
         </init-param>
 ```
 
-##Testing
+## Testing
 ### Record Mode
 ```bash
   curl -X POST http://localhost:8181/myservice?mockMode=record -H 'Content-Type: application/json' -d {'json':true}
