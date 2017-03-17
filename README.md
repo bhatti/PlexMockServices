@@ -44,7 +44,7 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and offer
 ```
 Note: You can specify mockMode as a request parameter or a header parameter.
 
-### Record Mode
+### Play Mode
 ```bash
   curl -X POST http://localhost:8181/myservice?mockMode=play -H 'Content-Type: application/json' -d {'json':true}
   curl -H 'Content-Type: application/json' -H "XMockMode: play" http://localhost:8181/myservice
