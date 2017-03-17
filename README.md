@@ -3,8 +3,8 @@
 This is a mock service for recording requests and responses to your REST API (or any web sever) and then playback.
 
 ##Requirements:
-   - Java 1.6+
-   - Gradle
+- Java 1.6+
+- Gradle
 
 ##Version
 - 0.1.x
@@ -13,14 +13,14 @@ This is a mock service for recording requests and responses to your REST API (or
 - MIT
 
 ##Building
-   - Checkout code from 
-      -- git clone git@github.com:bhatti/PlexMockServices.git
-   - Building
-    -- gradle compile
+- Checkout code from 
+* git clone git@github.com:bhatti/PlexMockServices.git
+- Building
+* gradle compile
 
 ##Configuring:
- - Edit src/main/webapp/WEB-INF/web.xml 
-  -- Specify default recordMode
+- Edit src/main/webapp/WEB-INF/web.xml 
+* Specify default recordMode
 ```xml
         <init-param>
             <param-name>recordMode</param-name> 
