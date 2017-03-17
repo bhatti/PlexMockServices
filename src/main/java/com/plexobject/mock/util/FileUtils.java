@@ -7,38 +7,23 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Random;
 
 import org.apache.log4j.Logger;
-
 
 public class FileUtils {
 	private static final Logger LOGGER = Logger.getLogger(FileUtils.class);
 
-	private static final File DIR = new File(System.getProperty("MOCK_FOLDER",
-			"."));
-	private static final Random random = new Random();
-	private final static String SKIP_PATTERN = System
-			.getProperty(
-					"skip.pattern",
-					"(<authToken>[0-9a-z\\-]+<.authToken>|<twoFactorChallenge>[0-9a-z\\-]+<.twoFactorChallenge>)");
+	private final static String SKIP_PATTERN = System.getProperty("skip.pattern",
+			"(<authToken>[0-9a-z\\-]+<.authToken>|<twoFactorChallenge>[0-9a-z\\-]+<.twoFactorChallenge>)");
 
-	private static String normalize(String name) {
-		return name.replaceAll("[\\&\\/\\?:;,\\s]", "_");
-	}
-
-	public static void write(byte[] data, String fileName) throws IOException {
-		DIR.mkdirs();
-		File path = new File(DIR, normalize(fileName));
-		BufferedOutputStream out = new BufferedOutputStream(
-				new FileOutputStream(path));
+	public static void write(byte[] data, File path) throws IOException {
+		BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(path));
 		out.write(data);
 		out.close();
 	}
@@ -55,30 +40,22 @@ public class FileUtils {
 		return out.toByteArray();
 	}
 
-	public static byte[] read(String fileName) throws IOException {
-		DIR.mkdirs();
-		File path = new File(DIR, fileName);
+	public static byte[] read(File path) throws IOException {
 		if (!path.exists() || !path.canRead()) {
 			throw new FileNotFoundException("Could not read " + path);
 		}
-		BufferedInputStream in = new BufferedInputStream(new FileInputStream(
-				path));
+		BufferedInputStream in = new BufferedInputStream(new FileInputStream(path));
 		return read(in);
 	}
 
-	public static void writeObject(Object obj, String name) {
-		DIR.mkdirs();
-		final String fileName = normalize(name);
-
-		File path = new File(DIR, fileName + (System.currentTimeMillis() % 10));
+	public static void writeObject(Object obj, File path) {
 		ObjectOutputStream out = null;
 		try {
-			out = new ObjectOutputStream(new BufferedOutputStream(
-					new FileOutputStream(path)));
+			out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(path)));
 			out.writeObject(obj);
 			out.close();
 		} catch (IOException e) {
-			System.err.println("Failed to write filename " + fileName);
+			System.err.println("Failed to write filename " + path);
 		} finally {
 			if (out != null) {
 				try {
@@ -89,39 +66,18 @@ public class FileUtils {
 		}
 	}
 
-	private static int random(int max) {
-		return Math.abs(Math.abs(random.nextInt()) % max);
-	}
-
-	public static Object readObject(final String name) {
-		DIR.mkdirs();
-		final String fileName = normalize(name);
-		File[] files = DIR.listFiles(new FilenameFilter() {
-
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.startsWith(fileName);
-			}
-		});
-
-		// File path = new File(DIR, fileName);
-
-		File path = files != null && files.length > 0 ? files[random(files.length)]
-				: null;
-
+	public static Object readObject(final File path) {
 		if (path == null || !path.exists() || !path.canRead()) {
-			LOGGER.info("Path " + path + " for name " + name + " not found on "
-					+ DIR);
+			LOGGER.info("Path " + path + " not found");
 			return null;
 		}
 
 		ObjectInputStream in = null;
 		try {
-			in = new ObjectInputStream(new BufferedInputStream(
-					new FileInputStream(path)));
+			in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(path)));
 			return in.readObject();
 		} catch (IOException e) {
-			System.err.println("Failed to read filename " + fileName);
+			System.err.println("Failed to read filename " + path);
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		} finally {
@@ -138,8 +94,7 @@ public class FileUtils {
 	public static String hash(final String text) {
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-1");
-			byte[] bytes = text.toLowerCase().replace(SKIP_PATTERN, "")
-					.getBytes();
+			byte[] bytes = text.toLowerCase().replace(SKIP_PATTERN, "").getBytes();
 			md.update(bytes, 0, bytes.length);
 			final byte[] sha1hash = md.digest();
 			return convertToHex(sha1hash);

@@ -20,6 +20,14 @@
             <param-name>urlPrefix</param-name> 
             <param-value>http://localhost:8181</param-value> 
         </init-param>
+        <init-param>
+            <param-name>dataDir</param-name> 
+            <param-value>data</param-value> 
+        </init-param>
+        <init-param>
+            <param-name>maxSamples</param-name> 
+            <param-value>10</param-value> 
+        </init-param>
         <load-on-startup>1</load-on-startup>
 
     </servlet>

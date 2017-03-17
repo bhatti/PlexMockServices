@@ -1,13 +1,14 @@
 package com.plexobject.mock.server;
 
+import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -28,74 +29,41 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.log4j.Logger;
 
 import com.plexobject.mock.util.FileUtils;
+import com.plexobject.mock.util.YAMLUtils;
 
 public class Server extends HttpServlet {
-	private static final Logger LOGGER = Logger.getLogger(Server.class);
+	private static final String YAML = ".yml";
+	private static final String POST = "POST";
+	private static final String MOCK_ID = "mockId";
 	private static final long serialVersionUID = 1L;
+	private static final String GET = "GET";
+	private static final String RECORD = "record";
+	private static final String MOCK_MODE = "mockMode";
+	private static final String XMOCK_MODE = "XMockMode";
+	private static final Logger LOGGER = Logger.getLogger(Server.class);
 	private final HttpClient httpClient;
 
-	static class Response implements Serializable {
-		private static final long serialVersionUID = 1L;
-		transient int responseCode;
-		byte[] payload;
-		Map<String, String[]> headers;
-		String contentType;
-
-		public Response(int responseCode, byte[] payload, String contentType, Map<String, String[]> headers) {
-			this.responseCode = responseCode;
-			this.payload = payload;
-			this.contentType = contentType;
-			this.headers = headers;
-		}
-
-		public int getResponseCode() {
-			return responseCode;
-		}
-
-		public void setResponseCode(int responseCode) {
-			this.responseCode = responseCode;
-		}
-
-		public byte[] getPayload() {
-			return payload;
-		}
-
-		public void setPayload(byte[] payload) {
-			this.payload = payload;
-		}
-
-		public String getContentType() {
-			return contentType;
-		}
-
-		public void setContentType(String contentType) {
-			this.contentType = contentType;
-		}
-
-		public Map<String, String[]> getHeaders() {
-			return headers;
-		}
-
-		public void setHeaders(Map<String, String[]> headers) {
-			this.headers = headers;
-		}
-
-	}
-
+	private Map<String, Integer> counters = new HashMap<>();
+	private int maxSamples;
 	private int connectionTimeoutMillis;
 	private boolean recordMode;
 	private String urlPrefix;
+	private File dataDir;
+
 	public Server() {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
 		httpClient = new HttpClient(connectionManager);
 		httpClient.getParams().setCookiePolicy(CookiePolicy.IGNORE_COOKIES);
 	}
-	
+
 	public void init(ServletConfig servletConfig) throws ServletException {
 		super.init(servletConfig);
 		connectionTimeoutMillis = Integer.parseInt(servletConfig.getInitParameter("connectionTimeoutMillis"));
+		maxSamples = Integer.parseInt(servletConfig.getInitParameter("maxSamples"));
 		recordMode = "true".equals(servletConfig.getInitParameter("recordMode"));
 		urlPrefix = servletConfig.getInitParameter("urlPrefix");
+		dataDir = new File(servletConfig.getInitParameter("dataDir"));
+		dataDir.mkdirs();
 
 		httpClient.getParams().setSoTimeout(connectionTimeoutMillis);
 		httpClient.getParams().setParameter("http.socket.timeout", connectionTimeoutMillis);
@@ -114,22 +82,26 @@ public class Server extends HttpServlet {
 	}
 
 	@Override
-	public void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+	protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	}
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		final String path = req.getRequestURI() + "?" + (req.getQueryString() == null ? "" : req.getQueryString());
 		final String url = urlPrefix + path;
-		Response response = null;
+		Map<java.lang.String, java.lang.String[]> params = req.getParameterMap();
+		String id = getRequestId(req, url, params, null);
 
-		boolean record = req.getParameter("mock_mode") != null
-				? "record".equalsIgnoreCase(req.getParameter("mock_mode")) : recordMode;
+		RecordedResponse response = null;
+
+		boolean record = isRecordMode(req);
 
 		if (record) {
 			LOGGER.info("GET RECORDING " + url + "\n");
-			response = get(url, toHeaders(req));
-			if (response.responseCode == 200) {
-				FileUtils.writeObject(response, url);
-			}
+			response = invokeGetOnRemoteServer(url, toHeaders(req));
+			save(response, id, GET);
 		} else {
-			response = (Response) FileUtils.readObject(url);
+			response = read(id, GET);
 			LOGGER.info("GET PLAYING " + url + " found " + (response != null) + "\n");
 
 		}
@@ -139,46 +111,34 @@ public class Server extends HttpServlet {
 		}
 		res.setContentType(response.contentType);
 		OutputStream out = res.getOutputStream();
-		out.write(response.payload);
+		out.write(response.payload.getBytes());
 		out.flush();
 	}
 
 	@Override
-	public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
 		final String path = req.getRequestURI() + "?" + (req.getQueryString() == null ? "" : req.getQueryString());
 		final String url = urlPrefix + path;
-		Response response = null;
-		@SuppressWarnings("unchecked")
+		RecordedResponse response = null;
 		Map<java.lang.String, java.lang.String[]> params = req.getParameterMap();
 		String body = new String(FileUtils.read(req.getInputStream()));
 
-		String key = null;
-		if (req.getParameter("mock_key") != null) {
-			key = req.getParameter("mock_key");
-		} else {
-			if (params != null && params.size() > 0) {
-				key = url + toKey(params);
-			} else {
-				key = url + FileUtils.hash(body);
-			}
-		}
-		boolean record = req.getParameter("mock_mode") != null
-				? "record".equalsIgnoreCase(req.getParameter("mock_mode")) : recordMode;
+		String id = getRequestId(req, url, params, body);
+		boolean record = isRecordMode(req);
 
 		if (record) {
-			LOGGER.info("POST RECORDING " + key + ", body " + body + "\n");
+			LOGGER.info("POST RECORDING " + id + ", body " + body + "\n");
 
-			if (params != null && params.size() > 0) {
-				response = post(url, params, toHeaders(req));
+			if (isApplicationRequest(req)) {
+				response = invokePostApplicationOnRemoteServer(url,
+						new String(req.getHeader("Content-Type").getBytes()), body, toHeaders(req));
 			} else {
-				response = post(url, new String(req.getHeader("Content-Type").getBytes()), body, toHeaders(req));
+				response = invokePostParamsOnRemoteServer(url, params, toHeaders(req));
 			}
-			if (response.responseCode == 200) {
-				FileUtils.writeObject(response, key);
-			}
+			save(response, id, POST);
 		} else {
-			response = (Response) FileUtils.readObject(key);
-			LOGGER.info("POST PLAYING " + key + ", body " + body + ", found " + (response != null) + "\n");
+			response = read(id, POST);
+			LOGGER.info("POST PLAYING " + id + ", body " + body + ", found " + (response != null) + "\n");
 		}
 
 		//
@@ -188,20 +148,37 @@ public class Server extends HttpServlet {
 		}
 		res.setContentType(response.contentType);
 		OutputStream out = res.getOutputStream();
-		out.write(response.payload);
-		LOGGER.debug("POST SENDING " + key + ", response " + new String(response.payload));
+		out.write(response.payload.getBytes());
+		LOGGER.debug("POST SENDING " + id + ", response " + new String(response.payload));
 
 		out.flush();
 	}
 
-	private Response get(final String u, final Map<java.lang.String, java.lang.String> headers) throws IOException {
-		Response response = execute(u, new GetMethod(u), headers);
-		FileUtils.writeObject(response, u);
-		return response;
+	@Override
+	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 	}
 
-	private Response post(final String u, final String contentType, final String content,
+	@Override
+	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	}
+
+	//////////////////// PRIVATE METHODS //////////////////
+
+	private boolean isRecordMode(HttpServletRequest req) {
+		String reqMode = req.getParameter(MOCK_MODE);
+		if (reqMode == null) {
+			reqMode = req.getHeader(XMOCK_MODE);
+		}
+		return reqMode != null ? RECORD.equalsIgnoreCase(reqMode) : recordMode;
+	}
+
+	private RecordedResponse invokeGetOnRemoteServer(final String url,
 			final Map<java.lang.String, java.lang.String> headers) throws IOException {
+		return execute(url, new GetMethod(url), headers);
+	}
+
+	private RecordedResponse invokePostApplicationOnRemoteServer(final String u, final String contentType,
+			final String content, final Map<java.lang.String, java.lang.String> headers) throws IOException {
 
 		final PostMethod post = new PostMethod(u);
 		try {
@@ -224,7 +201,8 @@ public class Server extends HttpServlet {
 		return FileUtils.hash(sb.toString());
 	}
 
-	private Response post(final String u, final Map<java.lang.String, java.lang.String[]> params,
+	private RecordedResponse invokePostParamsOnRemoteServer(final String u,
+			final Map<java.lang.String, java.lang.String[]> params,
 			final Map<java.lang.String, java.lang.String> headers) throws IOException {
 
 		final PostMethod post = new PostMethod(u);
@@ -240,27 +218,29 @@ public class Server extends HttpServlet {
 		}
 		final int sc = httpClient.executeMethod(post);
 		String type = post.getResponseHeader("Content-Type").getValue();
-		return new Response(sc, FileUtils.read(post.getResponseBodyAsStream()), type, toHeaders(post));
+		String contents = post.getResponseBodyAsString();
+		return new RecordedResponse(sc, type, toHeaders(post), contents);
 
 	}
 
-	private Map<String, String[]> toHeaders(final HttpMethodBase post) throws HttpException {
-		Map<String, String[]> headers = new HashMap<String, String[]>();
+	private Map<String, String> toHeaders(final HttpMethodBase post) throws HttpException {
+		Map<String, String> headers = new HashMap<>();
 		for (Header h : post.getRequestHeaders()) {
 			@SuppressWarnings("deprecation")
 			HeaderElement[] e = h.getValues();
-			String[] values = new String[e.length];
+			String value = null;
 			for (int i = 0; i < e.length; i++) {
-				values[i] = e[i].getValue();
+				value = e[i].getValue();
 			}
-			headers.put(h.getName(), values);
+			if (value != null) {
+				headers.put(h.getName(), value);
+			}
 		}
 		return headers;
 	}
 
 	public Map<String, String> toHeaders(final HttpServletRequest req) {
 		Map<String, String> headers = new HashMap<String, String>();
-		@SuppressWarnings("unchecked")
 		Enumeration<String> names = req.getHeaderNames();
 		while (names.hasMoreElements()) {
 			String name = names.nextElement();
@@ -270,7 +250,7 @@ public class Server extends HttpServlet {
 		return headers;
 	}
 
-	private Response execute(final String url, final HttpMethodBase method, Map<String, String> headers)
+	private RecordedResponse execute(final String url, final HttpMethodBase method, Map<String, String> headers)
 			throws IOException {
 		try {
 			for (Map.Entry<String, String> h : headers.entrySet()) {
@@ -280,15 +260,88 @@ public class Server extends HttpServlet {
 			if (sc < 200 || sc > 299) {
 				throw new IOException("Unexpected status code: " + sc + ": " + method.getStatusText() + " -- " + url);
 			}
-			final InputStream in = method.getResponseBodyAsStream();
+			String contents = method.getResponseBodyAsString();
 			String type = method.getResponseHeader("Content-Type").getValue();
 
-			return new Response(sc, FileUtils.read(in), type, toHeaders(method));
+			return new RecordedResponse(sc, type, toHeaders(method), contents);
 		} finally {
 			try {
 				method.releaseConnection();
 			} catch (Exception e) {
 			}
 		}
+	}
+
+	private String normalizeName(String url, String operation) {
+		int q = url.indexOf("?");
+		if (q != -1) {
+			url = url.substring(0, q);
+		}
+		return url.replaceAll("[\\&\\/\\?:;,\\s]", "_") + "_" + operation.toLowerCase();
+	}
+
+	private File toFile(String url, String operation, boolean readOnly) {
+		Random random = new Random();
+		final String name = normalizeName(url, operation);
+		if (readOnly) {
+			File[] files = dataDir.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.startsWith(name);
+				}
+			});
+			return files != null && files.length > 0 ? files[random.nextInt(files.length)] : null;
+		} else {
+			Integer counter = counters.get(name);
+			if (counter == null) {
+				counter = 1;
+			} else {
+				counter = counter + 1;
+			}
+			if (counter > maxSamples) {
+				counter = 1;
+			}
+			counters.put(name, counter);
+			return new File(dataDir, name + "_" + counter + YAML);
+		}
+	}
+
+	private void save(RecordedResponse response, String url, String operation) throws IOException {
+		if (isValidResponse(response)) {
+			File path = toFile(url, operation, false);
+			YAMLUtils.write(path, response);
+		}
+	}
+
+	private RecordedResponse read(String url, String operation) throws IOException {
+		File path = toFile(url, operation, true);
+		if (path == null) {
+			return null;
+		}
+		return (RecordedResponse) YAMLUtils.read(path, RecordedResponse.class);
+	}
+
+	private boolean isValidResponse(RecordedResponse response) {
+		return response.responseCode >= 200 && response.responseCode <= 299;
+	}
+
+	private boolean isApplicationRequest(HttpServletRequest req) {
+		String contentType = req.getHeader("Content-Type");
+		return contentType != null && contentType.startsWith("application/");
+	}
+
+	private String getRequestId(HttpServletRequest req, final String url,
+			Map<java.lang.String, java.lang.String[]> params, String body) {
+		String id;
+		if (req.getParameter(MOCK_ID) != null) {
+			id = req.getParameter(MOCK_ID);
+		} else {
+			if (body != null) {
+				id = url + FileUtils.hash(body);
+			} else {
+				id = url + toKey(params);
+			}
+		}
+		return id;
 	}
 }

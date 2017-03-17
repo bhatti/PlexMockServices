@@ -1,4 +1,8 @@
 target
 bin
 .metadata
-.settings
+.settings 
+.gradle
+build
+data
+
