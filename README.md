@@ -130,7 +130,7 @@ contents:
     fillDate: 1489812975262
 ```
 
-## Static YAML output files
+## Dynamic Velocity output files
 Here is an example of response that is saved in YAML format for easy editing:
 ```vm
 ---
