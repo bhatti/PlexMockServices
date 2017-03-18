@@ -5,4 +5,4 @@ bin
 .gradle
 build
 data
-
+node_modules
