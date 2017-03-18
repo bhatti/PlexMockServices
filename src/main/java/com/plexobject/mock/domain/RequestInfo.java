@@ -1,4 +1,4 @@
-package com.plexobject.mock.server;
+package com.plexobject.mock.domain;
 
 import java.io.IOException;
 import java.util.Enumeration;
@@ -11,7 +11,7 @@ import com.plexobject.mock.util.FileUtils;
 
 public class RequestInfo {
     private static final String REQUEST_ID = "requestId";
-
+    private final boolean useHash;
     private final String requestId;
     private final String url;
     private final String contentType;
@@ -19,14 +19,16 @@ public class RequestInfo {
     private final Map<java.lang.String, java.lang.String[]> params;
     private final String content;
 
-    RequestInfo(final String urlPrefix, final HttpServletRequest req) throws IOException {
-        url = urlPrefix + getPath(req);
+    public RequestInfo(final String urlPrefix, final HttpServletRequest req) throws IOException {
+        String path = getPath(req);
+        url = urlPrefix + path;
         contentType = req.getContentType();
         headers = toHeaders(req);
         params = req.getParameterMap();
+        useHash = "true".equals(params.get("mockUseHash"));
         byte[] data = FileUtils.read(req.getInputStream());
         content = data.length > 0 ? new String(data) : null;
-        requestId = getRequestId(req, url, req.getParameterMap(), null);
+        requestId = getRequestId(req, path, req.getParameterMap(), null);
     }
 
     public String getRequestId() {
@@ -69,19 +71,19 @@ public class RequestInfo {
         return req.getQueryString() == null ? req.getRequestURI() : req.getRequestURI() + "?" + req.getQueryString();
     }
 
-    private static String getRequestId(HttpServletRequest req, final String url,
+    private String getRequestId(HttpServletRequest req, final String path,
             Map<java.lang.String, java.lang.String[]> params, String body) {
-        String id;
+        String id = "";
         if (req.getParameter(REQUEST_ID) != null) {
             id = req.getParameter(REQUEST_ID);
-        } else {
+        } else if (useHash) {
             if (body != null) {
                 id = FileUtils.hash(body);
             } else {
                 id = toKey(params);
             }
         }
-        return url + id;
+        return path + id;
     }
 
     private static Map<String, String> toHeaders(final HttpServletRequest req) {

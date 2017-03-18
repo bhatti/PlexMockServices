@@ -1,4 +1,4 @@
-package com.plexobject.mock.server;
+package com.plexobject.mock.domain;
 
 import java.io.IOException;
 import java.util.List;

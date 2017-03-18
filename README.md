@@ -28,6 +28,16 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and offer
         </init-param>
 ```
 
+- Specify order of response
+```xml
+        <init-param>
+            <param-name>randomResponseOrder</param-name> 
+            <param-value>true</param-value> 
+        </init-param>
+```
+If randomResponseOrder is true then mock server will send random response, otherwise it will send in the order they were recorded. 
+Note: The order is not preserved between restarts of the server.
+
 - Specify target service base URL
 ```xml
         <init-param>
@@ -54,20 +64,11 @@ Note: You can specify mockMode as a request parameter or a header parameter.
 ### Specifying the id for request
    By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter requestId.
 
-## Sample App
-After starting server by:
-```bash 
-./server.sh
-```
+## Recorded Response Files
+PlexMockServices supports static responses based on YAML format and dynamic response files based on 
+Velcity templates. It allows you to define output based on request parameters 
 
-You can find a sample REST app based on node.js restify under sample folder, which you can start by running 
-```bash 
-cd sample
-./server.sh
-```
-You can then look at client.sh for sample curl commands.
-
-## Sample YAML output files
+## Static YAML output files
 Here is an example of response that is saved in YAML format for easy editing:
 ```yaml
 ---
@@ -94,31 +95,6 @@ contents:
       quantity: 1.82
       fillPrice: 169.80
       fillQuantity: 1.82
-    - side: "BUY"
-      price: 124.19
-      quantity: 3.712
-      fillPrice: 124.19
-      fillQuantity: 3.71
-    - side: "BUY"
-      price: 189.60
-      quantity: 2.30
-      fillPrice: 189.60
-      fillQuantity: 2.30
-    - side: "BUY"
-      price: 114.52
-      quantity: 1.81
-      fillPrice: 114.52
-      fillQuantity: 1.81
-    - side: "BUY"
-      price: 122.59
-      quantity: 5.65
-      fillPrice: 122.59536943620424
-      fillQuantity: 5.65
-    - side: "BUY"
-      price: 119.93
-      quantity: 7.78
-      fillPrice: 119.93
-      fillQuantity: 7.78
     - side: "BUY"
       price: 133.77
       quantity: 7.43
@@ -153,6 +129,91 @@ contents:
     marketSession: "OPEN"
     fillDate: 1489812975262
 ```
+
+## Static YAML output files
+Here is an example of response that is saved in YAML format for easy editing:
+```vm
+---
+responseCode: #if($!{$mockRC}) 200 #else $mockRC
+#end
+headers: {}
+contentType: "application/json; charset=utf-8"
+contentClass: "java.util.Map"
+contents: 
+#set($start = 1)
+#set($end = 10)
+#set($range = [$start..$end])
+#foreach($i in $range)
+  $i:
+    name: "$name $i"
+    id: $i
+#end
+```
+
+You can then call a curl request such as:
+curl -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=name_prefix'
+and it would return
+```json
+{
+	"1": {
+		"name": "jack 1",
+		"id": 1
+	},
+	"2": {
+		"name": "jack 2",
+		"id": 2
+	},
+	"3": {
+		"name": "jack 3",
+		"id": 3
+	},
+	"4": {
+		"name": "jack 4",
+		"id": 4
+	},
+	"5": {
+		"name": "jack 5",
+		"id": 5
+	},
+	"6": {
+		"name": "jack 6",
+		"id": 6
+	},
+	"7": {
+		"name": "jack 7",
+		"id": 7
+	},
+	"8": {
+		"name": "jack 8",
+		"id": 8
+	},
+	"9": {
+		"name": "jack 9",
+		"id": 9
+	},
+	"10": {
+		"name": "jack 10",
+		"id": 10
+	}
+}
+```
+You can then mimick failure by passing mockRC, e.g.
+```bash 
+curl -v -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack&mockRC=404'
+```
+This would return 404 return code.
+## Sample App
+After starting server by:
+```bash 
+./server.sh
+```
+
+You can find a sample REST app based on node.js restify under sample folder, which you can start by running 
+```bash 
+cd sample
+./server.sh
+```
+You can then look at client.sh for sample curl commands.
 
 ## Contact
 Thank you for downloading PlexMockServices. Please send questions or suggestions to bhatti AT plexobject.com.
