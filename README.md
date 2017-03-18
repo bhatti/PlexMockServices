@@ -67,6 +67,92 @@ cd sample
 ```
 You can then look at client.sh for sample curl commands.
 
+## Sample YAML output files
+Here is an example of response that is saved in YAML format for easy editing:
+```yaml
+---
+responseCode: 200
+headers: {}
+contentType: "application/json"
+contentClass: "java.util.Map"
+contents:
+  findByAccountsResponse:
+  - date: 1452739584192
+    orderId: 1
+    account:
+      accountId: 1
+      accountName: "CX2001"
+    security:
+      securityId: 1
+      symbol: "AAPL"
+      name: "Apple"
+      securityType: "STOCK"
+    exchange: "NYSE"
+    orderLegs:
+    - side: "BUY"
+      price: 169.80
+      quantity: 1.82
+      fillPrice: 169.80
+      fillQuantity: 1.82
+    - side: "BUY"
+      price: 124.19
+      quantity: 3.712
+      fillPrice: 124.19
+      fillQuantity: 3.71
+    - side: "BUY"
+      price: 189.60
+      quantity: 2.30
+      fillPrice: 189.60
+      fillQuantity: 2.30
+    - side: "BUY"
+      price: 114.52
+      quantity: 1.81
+      fillPrice: 114.52
+      fillQuantity: 1.81
+    - side: "BUY"
+      price: 122.59
+      quantity: 5.65
+      fillPrice: 122.59536943620424
+      fillQuantity: 5.65
+    - side: "BUY"
+      price: 119.93
+      quantity: 7.78
+      fillPrice: 119.93
+      fillQuantity: 7.78
+    - side: "BUY"
+      price: 133.77
+      quantity: 7.43
+      fillPrice: 133.77
+      fillQuantity: 7.43
+    status: "FILLED"
+    marketSession: "OPEN"
+    fillDate: 1489812951913
+  - date: 1452739584192
+    orderId: 2
+    account:
+      accountId: 1
+      accountName: "CX2001"
+    security:
+      securityId: 1
+      symbol: "AAPL"
+      name: "Apple"
+      securityType: "STOCK"
+    exchange: "NYSE"
+    orderLegs:
+    - side: "BUY"
+      price: 169.80
+      quantity: 1.82
+      fillPrice: 169.80
+      fillQuantity: 1.82
+    - side: "BUY"
+      price: 124.19
+      quantity: 3.71
+      fillPrice: 124.19
+      fillQuantity: 3.71
+    status: "FILLED"
+    marketSession: "OPEN"
+    fillDate: 1489812975262
+```
 
 ## Contact
 Thank you for downloading PlexMockServices. Please send questions or suggestions to bhatti AT plexobject.com.
