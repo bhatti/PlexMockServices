@@ -10,7 +10,7 @@
         <servlet-class>com.plexobject.mock.server.Server</servlet-class>
         <init-param>
             <param-name>connectionTimeoutMillis</param-name> 
-            <param-value>60000</param-value> 
+            <param-value>10000</param-value> 
         </init-param>
         <init-param>
             <param-name>recordMode</param-name> 
@@ -18,7 +18,7 @@
         </init-param>
         <init-param>
             <param-name>urlPrefix</param-name> 
-            <param-value>http://localhost:8181</param-value> 
+            <param-value>http://localhost:8000</param-value> 
         </init-param>
         <init-param>
             <param-name>dataDir</param-name> 

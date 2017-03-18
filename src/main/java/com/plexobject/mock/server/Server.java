@@ -5,7 +5,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -23,25 +22,29 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.log4j.Logger;
 
-import com.plexobject.mock.util.FileUtils;
 import com.plexobject.mock.util.YAMLUtils;
 
 public class Server extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String YAML = ".yml";
-	private static final String POST = "POST";
-	private static final String REQUEST_ID = "requestId";
-	private static final String GET = "GET";
 	private static final String RECORD = "record";
 	private static final String MOCK_MODE = "mockMode";
 	private static final String XMOCK_MODE = "XMockMode";
-	private static final Logger LOGGER = Logger.getLogger(Server.class);
+	private static final Logger logger = Logger.getLogger(Server.class);
 	private final HttpClient httpClient;
+
+	enum MethodType {
+		GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH
+	}
 
 	private Map<String, Integer> counters = new HashMap<>();
 	private int maxSamples;
@@ -78,88 +81,32 @@ public class Server extends HttpServlet {
 		if (urlPrefix.endsWith("/")) {
 			urlPrefix = urlPrefix.substring(0, urlPrefix.length() - 1);
 		}
-		LOGGER.info("TARGET URL PREFIX " + urlPrefix + " record mode ? " + recordMode);
+		logger.info("TARGET URL PREFIX " + urlPrefix + " record mode ? " + recordMode);
 	}
 
 	@Override
-	protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doHead(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		doService(req, res, MethodType.HEAD);
 	}
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-		final String path = req.getRequestURI() + "?" + (req.getQueryString() == null ? "" : req.getQueryString());
-		final String url = urlPrefix + path;
-		Map<java.lang.String, java.lang.String[]> params = req.getParameterMap();
-		String id = getRequestId(req, url, params, null);
-
-		RecordedResponse response = null;
-
-		boolean record = isRecordMode(req);
-
-		if (record) {
-			LOGGER.info("GET RECORDING " + url + "\n");
-			response = invokeGetOnRemoteServer(url, toHeaders(req));
-			save(response, id, GET);
-		} else {
-			response = read(id, GET);
-			LOGGER.info("GET PLAYING " + url + " found " + (response != null) + "\n");
-
-		}
-		if (response == null) {
-			res.sendError(500, "Failed to find response for " + path);
-			return;
-		}
-		res.setContentType(response.contentType);
-		OutputStream out = res.getOutputStream();
-		out.write(response.payload.getBytes());
-		out.flush();
+		doService(req, res, MethodType.GET);
 	}
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-		final String path = req.getRequestURI() + "?" + (req.getQueryString() == null ? "" : req.getQueryString());
-		final String url = urlPrefix + path;
-		RecordedResponse response = null;
-		Map<java.lang.String, java.lang.String[]> params = req.getParameterMap();
-		String body = new String(FileUtils.read(req.getInputStream()));
-
-		String id = getRequestId(req, url, params, body);
-		boolean record = isRecordMode(req);
-
-		if (record) {
-			LOGGER.info("POST RECORDING " + id + ", body " + body + "\n");
-
-			if (isApplicationRequest(req)) {
-				response = invokePostApplicationOnRemoteServer(url,
-						new String(req.getHeader("Content-Type").getBytes()), body, toHeaders(req));
-			} else {
-				response = invokePostParamsOnRemoteServer(url, params, toHeaders(req));
-			}
-			save(response, id, POST);
-		} else {
-			response = read(id, POST);
-			LOGGER.info("POST PLAYING " + id + ", body " + body + ", found " + (response != null) + "\n");
-		}
-
-		//
-		if (response == null) {
-			res.sendError(500, "Failed to find response for " + path);
-			return;
-		}
-		res.setContentType(response.contentType);
-		OutputStream out = res.getOutputStream();
-		out.write(response.payload.getBytes());
-		LOGGER.debug("POST SENDING " + id + ", response " + new String(response.payload));
-
-		out.flush();
+		doService(req, res, MethodType.POST);
 	}
 
 	@Override
-	protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPut(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		doService(req, res, MethodType.PUT);
 	}
 
 	@Override
-	protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doDelete(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+		doService(req, res, MethodType.DELETE);
 	}
 
 	//////////////////// PRIVATE METHODS //////////////////
@@ -172,60 +119,108 @@ public class Server extends HttpServlet {
 		return reqMode != null ? RECORD.equalsIgnoreCase(reqMode) : recordMode;
 	}
 
-	private RecordedResponse invokeGetOnRemoteServer(final String url,
-			final Map<java.lang.String, java.lang.String> headers) throws IOException {
-		return execute(url, new GetMethod(url), headers);
+	private void doService(HttpServletRequest req, HttpServletResponse res, MethodType methodType)
+			throws ServletException, IOException {
+		RequestInfo requestInfo = new RequestInfo(urlPrefix, req);
+		RecordedResponse response = null;
+
+		if (isRecordMode(req)) {
+			logger.info(methodType + " RECORDING " + requestInfo);
+
+			response = invokeRemoteAPI(methodType, requestInfo);
+			save(response, requestInfo.requestId, methodType);
+		} else {
+			response = read(requestInfo.requestId, methodType);
+			logger.info(methodType + " PLAYING " + requestInfo);
+		}
+
+		//
+		if (response == null) {
+			res.sendError(500, "Failed to find response for " + requestInfo.url);
+			return;
+		}
+		res.setContentType(response.contentType);
+		OutputStream out = res.getOutputStream();
+		if (response.payload instanceof byte[]) {
+			out.write(((byte[]) response.payload));
+		} else if (response.payload instanceof String) {
+			out.write(((String) response.payload).getBytes());
+		} else if (response.payload != null) {
+			out.write(response.payload.toString().getBytes());
+		}
+		logger.debug(methodType + " SENDING " + requestInfo.requestId + ", response " + response.payload);
+
+		out.flush();
 	}
 
-	private RecordedResponse invokePostApplicationOnRemoteServer(final String u, final String contentType,
-			final String content, final Map<java.lang.String, java.lang.String> headers) throws IOException {
+	private RecordedResponse invokeRemoteAPI(final MethodType methodType, final RequestInfo requestInfo)
+			throws IOException, UnsupportedEncodingException {
 
-		final PostMethod post = new PostMethod(u);
+		HttpMethodBase method = null;
+		switch (methodType) {
+		case GET:
+			method = new GetMethod(requestInfo.url);
+			break;
+		case POST:
+			method = new PostMethod(requestInfo.url);
+			if (requestInfo.content != null) {
+				((EntityEnclosingMethod) method).setRequestEntity(
+						new StringRequestEntity(requestInfo.content, requestInfo.contentType, "UTF-8"));
+			}
+			break;
+		case PUT:
+			method = new PutMethod(requestInfo.url);
+			if (requestInfo.content != null) {
+				((EntityEnclosingMethod) method).setRequestEntity(
+						new StringRequestEntity(requestInfo.content, requestInfo.contentType, "UTF-8"));
+			}
+			break;
+		case DELETE:
+			method = new DeleteMethod(requestInfo.url);
+			break;
+		case HEAD:
+			method = new HeadMethod(requestInfo.url);
+			break;
+		default:
+			return null;
+		}
+		return execute(requestInfo.url, method, requestInfo.headers, requestInfo.params);
+	}
+
+	private RecordedResponse execute(final String url, final HttpMethodBase method, Map<String, String> headers,
+			final Map<java.lang.String, java.lang.String[]> params) throws IOException {
 		try {
-			post.setRequestEntity(new StringRequestEntity(content, contentType, "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			throw new IOException("Failed to encode " + u, e);
-		}
-		return execute(u, post, headers);
-	}
-
-	private static final String toKey(final Map<java.lang.String, java.lang.String[]> params) {
-		StringBuilder sb = new StringBuilder();
-		for (Map.Entry<String, String[]> e : params.entrySet()) {
-			for (String v : e.getValue()) {
-				if (e.getKey() != null && v != null) {
-					sb.append(e.getKey().trim() + ":" + v.trim());
+			for (Map.Entry<String, String> h : headers.entrySet()) {
+				method.setRequestHeader(h.getKey(), h.getValue());
+			}
+			if (params != null && method instanceof PostMethod) {
+				for (Map.Entry<String, String[]> e : params.entrySet()) {
+					for (String v : e.getValue()) {
+						if (e.getKey() != null && v != null) {
+							((PostMethod) method).addParameter(e.getKey().trim(), v.trim());
+						}
+					}
 				}
 			}
-		}
-		return FileUtils.hash(sb.toString());
-	}
+			final int sc = httpClient.executeMethod(method);
+			if (!isValidResponse(sc)) {
+				logger.error("Unexpected status code: " + sc + ": " + method.getStatusText() + " -- " + url);
+			}
+			String contents = method.getResponseBodyAsString();
+			String type = method.getResponseHeader("Content-Type").getValue();
 
-	private RecordedResponse invokePostParamsOnRemoteServer(final String u,
-			final Map<java.lang.String, java.lang.String[]> params,
-			final Map<java.lang.String, java.lang.String> headers) throws IOException {
-
-		final PostMethod post = new PostMethod(u);
-		for (Map.Entry<String, String> h : headers.entrySet()) {
-			post.setRequestHeader(h.getKey(), h.getValue());
-		}
-		for (Map.Entry<String, String[]> e : params.entrySet()) {
-			for (String v : e.getValue()) {
-				if (e.getKey() != null && v != null) {
-					post.addParameter(e.getKey().trim(), v.trim());
-				}
+			return new RecordedResponse(sc, type, toResponseHeaders(method), contents);
+		} finally {
+			try {
+				method.releaseConnection();
+			} catch (Exception e) {
 			}
 		}
-		final int sc = httpClient.executeMethod(post);
-		String type = post.getResponseHeader("Content-Type").getValue();
-		String contents = post.getResponseBodyAsString();
-		return new RecordedResponse(sc, type, toHeaders(post), contents);
-
 	}
 
-	private Map<String, String> toHeaders(final HttpMethodBase post) throws HttpException {
+	private Map<String, String> toResponseHeaders(final HttpMethodBase post) throws HttpException {
 		Map<String, String> headers = new HashMap<>();
-		for (Header h : post.getRequestHeaders()) {
+		for (Header h : post.getResponseHeaders()) {
 			@SuppressWarnings("deprecation")
 			HeaderElement[] e = h.getValues();
 			String value = null;
@@ -239,39 +234,6 @@ public class Server extends HttpServlet {
 		return headers;
 	}
 
-	public Map<String, String> toHeaders(final HttpServletRequest req) {
-		Map<String, String> headers = new HashMap<String, String>();
-		Enumeration<String> names = req.getHeaderNames();
-		while (names.hasMoreElements()) {
-			String name = names.nextElement();
-			String value = req.getHeader(name);
-			headers.put(name, value);
-		}
-		return headers;
-	}
-
-	private RecordedResponse execute(final String url, final HttpMethodBase method, Map<String, String> headers)
-			throws IOException {
-		try {
-			for (Map.Entry<String, String> h : headers.entrySet()) {
-				method.setRequestHeader(h.getKey(), h.getValue());
-			}
-			final int sc = httpClient.executeMethod(method);
-			if (sc < 200 || sc > 299) {
-				throw new IOException("Unexpected status code: " + sc + ": " + method.getStatusText() + " -- " + url);
-			}
-			String contents = method.getResponseBodyAsString();
-			String type = method.getResponseHeader("Content-Type").getValue();
-
-			return new RecordedResponse(sc, type, toHeaders(method), contents);
-		} finally {
-			try {
-				method.releaseConnection();
-			} catch (Exception e) {
-			}
-		}
-	}
-
 	private String normalizeName(String url, String operation) {
 		int q = url.indexOf("?");
 		if (q != -1) {
@@ -280,9 +242,9 @@ public class Server extends HttpServlet {
 		return url.replaceAll("[\\&\\/\\?:;,\\s]", "_") + "_" + operation.toLowerCase();
 	}
 
-	private File toFile(String url, String operation, boolean readOnly) {
+	private File toFile(String url, MethodType methodType, boolean readOnly) {
 		Random random = new Random();
-		final String name = normalizeName(url, operation);
+		final String name = normalizeName(url, methodType.name());
 		if (readOnly) {
 			File[] files = dataDir.listFiles(new FilenameFilter() {
 				@Override
@@ -306,42 +268,20 @@ public class Server extends HttpServlet {
 		}
 	}
 
-	private void save(RecordedResponse response, String url, String operation) throws IOException {
-		if (isValidResponse(response)) {
-			File path = toFile(url, operation, false);
-			YAMLUtils.write(path, response);
-		}
+	private void save(RecordedResponse response, String url, MethodType methodType) throws IOException {
+		File path = toFile(url, methodType, false);
+		YAMLUtils.write(path, response);
 	}
 
-	private RecordedResponse read(String url, String operation) throws IOException {
-		File path = toFile(url, operation, true);
+	private RecordedResponse read(String url, MethodType methodType) throws IOException {
+		File path = toFile(url, methodType, true);
 		if (path == null) {
 			return null;
 		}
 		return (RecordedResponse) YAMLUtils.read(path, RecordedResponse.class);
 	}
 
-	private boolean isValidResponse(RecordedResponse response) {
-		return response.responseCode >= 200 && response.responseCode <= 299;
-	}
-
-	private boolean isApplicationRequest(HttpServletRequest req) {
-		String contentType = req.getHeader("Content-Type");
-		return contentType != null && contentType.startsWith("application/");
-	}
-
-	private String getRequestId(HttpServletRequest req, final String url,
-			Map<java.lang.String, java.lang.String[]> params, String body) {
-		String id;
-		if (req.getParameter(REQUEST_ID) != null) {
-			id = req.getParameter(REQUEST_ID);
-		} else {
-			if (body != null) {
-				id = url + FileUtils.hash(body);
-			} else {
-				id = url + toKey(params);
-			}
-		}
-		return id;
+	private boolean isValidResponse(int responseCode) {
+		return responseCode >= 200 && responseCode <= 299;
 	}
 }

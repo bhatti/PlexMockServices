@@ -6,12 +6,12 @@ public class RecordedResponse {
 	transient int responseCode;
 	Map<String, String> headers;
 	String contentType;
-	String payload;
+	Object payload;
 
 	public RecordedResponse() {
 	}
 
-	public RecordedResponse(int responseCode, String contentType, Map<String, String> headers, String payload) {
+	public RecordedResponse(int responseCode, String contentType, Map<String, String> headers, Object payload) {
 		this.responseCode = responseCode;
 		this.contentType = contentType;
 		this.headers = headers;
@@ -26,11 +26,11 @@ public class RecordedResponse {
 		this.responseCode = responseCode;
 	}
 
-	public String getPayload() {
+	public Object getPayload() {
 		return payload;
 	}
 
-	public void setPayload(String payload) {
+	public void setPayload(Object payload) {
 		this.payload = payload;
 	}
 

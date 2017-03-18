@@ -54,7 +54,21 @@ Note: You can specify mockMode as a request parameter or a header parameter.
 ### Specifying the id for request
    By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter requestId.
 
+## Sample App
+After starting server by:
+```bash 
+./server.sh
+```
 
+You can find a sample REST app based on node.js restify under sample folder, which you can start by running 
+```bash 
+cd sample
+./server.sh
+```
+You can then look at client.sh for sample curl commands.
+
+
+## Contact
 Thank you for downloading PlexMockServices. Please send questions or suggestions to bhatti AT plexobject.com.
 
 This software is released under MIT General Public License. 
