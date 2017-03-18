@@ -18,7 +18,7 @@
         </init-param>
         <init-param>
             <param-name>urlPrefix</param-name> 
-            <param-value>http://localhost:8000</param-value> 
+            <param-value>http://localhost:9395</param-value> 
         </init-param>
         <init-param>
             <param-name>dataDir</param-name> 
