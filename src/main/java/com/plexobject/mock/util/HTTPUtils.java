@@ -26,6 +26,7 @@ import com.plexobject.mock.domain.RecordedResponse;
 import com.plexobject.mock.domain.RequestInfo;
 
 public class HTTPUtils {
+    private static final String CONTENT_TYPE = "Content-Type";
     private final HttpClient httpClient;
 
     public HTTPUtils(Configuration config) {
@@ -85,8 +86,8 @@ public class HTTPUtils {
                 }
             }
             final int sc = httpClient.executeMethod(method);
-            String contents = method.getResponseBodyAsString();
-            String type = method.getResponseHeader("Content-Type").getValue();
+            String contents = new String(FileUtils.read(method.getResponseBodyAsStream()));
+            String type = method.getResponseHeader(CONTENT_TYPE).getValue();
 
             return new RecordedResponse(sc, type, toResponseHeaders(method), contents);
         } finally {
@@ -96,6 +97,7 @@ public class HTTPUtils {
             }
         }
     }
+
     private Map<String, String> toResponseHeaders(final HttpMethodBase post) throws HttpException {
         Map<String, String> headers = new HashMap<>();
         for (Header h : post.getResponseHeaders()) {

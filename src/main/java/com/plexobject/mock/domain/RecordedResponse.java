@@ -29,6 +29,11 @@ public class RecordedResponse {
         return contentType != null && contentType.startsWith("application/json");
     }
 
+    @JsonIgnore
+    public boolean isValidResponseCode() {
+        return responseCode >= 200 && responseCode <= 299;
+    }
+
     public int getResponseCode() {
         return responseCode;
     }

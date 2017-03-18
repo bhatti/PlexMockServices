@@ -38,6 +38,27 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and offer
 If randomResponseOrder is true then mock server will send random response, otherwise it will send in the order they were recorded. 
 Note: The order is not preserved between restarts of the server.
 
+- Add random failures/wait times
+```xml
+        <init-param>
+            <param-name>injectFailuresAndWaitTimesPerc</param-name> 
+            <param-value>10</param-value> 
+        </init-param>
+```
+This means that 10% of responses will either fail or will have high wait times.
+You can configure minWaitTimeMillis and maxWaitTimeMillis for minimum/maximum wait that request will take.
+- Add random failures/wait times
+```xml
+        <init-param>
+            <param-name>minWaitTimeMillis</param-name> 
+            <param-value>10</param-value> 
+        </init-param>
+        <init-param>
+            <param-name>maxWaitTimeMillis</param-name> 
+            <param-value>1000</param-value> 
+        </init-param>
+```
+
 - Specify target service base URL
 ```xml
         <init-param>
@@ -63,6 +84,12 @@ Note: You can specify mockMode as a request parameter or a header parameter.
 
 ### Specifying the id for request
    By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter requestId.
+
+### Specifying wait time for request
+   You can optionally specify mockWaitTimeMillis parameter to the HTTP request for adding wait time before response is sent. Alternatively, you can use injectFailuresAndWaitTimesPerc to add random failures or delays.
+
+### Specifying response code for request
+   You can optionally specify mockResponseCode parameter for HTTP response code to return.
 
 ## Recorded Response Files
 PlexMockServices supports static responses based on YAML format and dynamic response files based on 

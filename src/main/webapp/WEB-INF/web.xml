@@ -13,6 +13,18 @@
             <param-value>10000</param-value> 
         </init-param>
         <init-param>
+            <param-name>injectFailuresAndWaitTimesPerc</param-name> 
+            <param-value>10</param-value> 
+        </init-param>
+        <init-param>
+            <param-name>minWaitTimeMillis</param-name> 
+            <param-value>10</param-value> 
+        </init-param>
+        <init-param>
+            <param-name>maxWaitTimeMillis</param-name> 
+            <param-value>1000</param-value> 
+        </init-param>
+        <init-param>
             <param-name>recordMode</param-name> 
             <param-value>true</param-value> 
         </init-param>

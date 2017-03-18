@@ -10,7 +10,10 @@ import javax.servlet.http.HttpServletRequest;
 import com.plexobject.mock.util.FileUtils;
 
 public class RequestInfo {
+    private static final String MOCK_USE_HASH = "mockUseHash";
     private static final String REQUEST_ID = "requestId";
+    private static final String MOCK_WAIT_TIME_MILLIS = "mockWaitTimeMillis";
+    private static final String MOCK_RESPONSE_CODE = "mockResponseCode";
     private final boolean useHash;
     private final String requestId;
     private final String url;
@@ -18,6 +21,8 @@ public class RequestInfo {
     private final Map<java.lang.String, java.lang.String> headers;
     private final Map<java.lang.String, java.lang.String[]> params;
     private final String content;
+    private final int mockWaitTimeMillis;
+    private final int mockResponseCode;
 
     public RequestInfo(final String urlPrefix, final HttpServletRequest req) throws IOException {
         String path = getPath(req);
@@ -25,14 +30,33 @@ public class RequestInfo {
         contentType = req.getContentType();
         headers = toHeaders(req);
         params = req.getParameterMap();
-        useHash = "true".equals(params.get("mockUseHash"));
+        useHash = "true".equals(params.get(MOCK_USE_HASH));
         byte[] data = FileUtils.read(req.getInputStream());
         content = data.length > 0 ? new String(data) : null;
         requestId = getRequestId(req, path, req.getParameterMap(), null);
+        mockWaitTimeMillis = getInteger(MOCK_WAIT_TIME_MILLIS, params);
+        mockResponseCode = getInteger(MOCK_RESPONSE_CODE, params);
+    }
+
+    private static int getInteger(String name, Map<java.lang.String, java.lang.String[]> params) {
+        String[] value = params.get(name);
+        if (value != null && value.length > 0) {
+            return Integer.parseInt(value[0]);
+        } else {
+            return 0;
+        }
     }
 
     public String getRequestId() {
         return requestId;
+    }
+
+    public int getMockWaitTimeMillis() {
+        return mockWaitTimeMillis;
+    }
+
+    public int getMockResponseCode() {
+        return mockResponseCode;
     }
 
     public String getUrl() {

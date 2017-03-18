@@ -81,14 +81,16 @@ public class MockService extends HttpServlet {
         RequestInfo requestInfo = new RequestInfo(config.getUrlPrefix(), req);
         RecordedResponse response = null;
 
+        StringBuilder debugInfo = new StringBuilder();
+
         if (isRecordMode(req)) {
-            logger.info(methodType + " RECORDING " + requestInfo);
+            debugInfo.append(methodType + " RECORDING " + requestInfo);
 
             response = httpUtils.invokeRemoteAPI(methodType, requestInfo);
             save(response, methodType, requestInfo);
         } else {
             response = read(methodType, requestInfo);
-            logger.info(methodType + " PLAYING " + requestInfo);
+            debugInfo.append(methodType + " PLAYING " + requestInfo);
         }
 
         //
@@ -96,20 +98,53 @@ public class MockService extends HttpServlet {
             res.sendError(500, "Failed to find response for " + requestInfo.getUrl());
             return;
         }
-        res.setContentType(response.getContentType());
-        res.setStatus(response.getResponseCode());
-        OutputStream out = res.getOutputStream();
-        if (response.getContents() instanceof byte[]) {
-            out.write(((byte[]) response.getContents()));
-        } else if (response.getContents() instanceof String) {
-            out.write(((String) response.getContents()).getBytes());
-        } else if (response.getContents() != null) {
-            out.write(response.getContents().toString().getBytes());
-        }
-        logger.info(methodType + " SENDING " + requestInfo.getRequestId() + ", status " + response.getResponseCode()
-                + ", response " + response.getContentType());
 
+        if (requestInfo.getMockWaitTimeMillis() > 0) {
+            debugInfo.append("\tAdding delay from request " + requestInfo.getMockWaitTimeMillis() + "ms\n");
+            delay(requestInfo.getMockWaitTimeMillis());
+        } else if (config.getInjectFailuresAndWaitTimesPerc() > 0) {
+            int delay = config.getRandomFailuresAndWaitTimesPerc();
+            if (delay > 0) {
+                if (delay % 2 == 0) {
+                    debugInfo.append("\tAdding random delay " + delay + "ms\n");
+                    delay(delay); // inject delay
+                } else {
+                    debugInfo.append("\tAdding random failure\n");
+                    response.setResponseCode(500);
+                }
+            }
+        }
+
+        if (requestInfo.getMockResponseCode() > 0) {
+            res.setStatus(requestInfo.getMockResponseCode());
+        } else {
+            res.setStatus(response.getResponseCode());
+        }
+
+        res.setContentType(response.getContentType());
+        OutputStream out = res.getOutputStream();
+        if (response.isValidResponseCode()) {
+            if (response.getContents() instanceof byte[]) {
+                out.write(((byte[]) response.getContents()));
+            } else if (response.getContents() instanceof String) {
+                out.write(((String) response.getContents()).getBytes());
+            } else if (response.getContents() != null) {
+                out.write(response.getContents().toString().getBytes());
+            }
+        } else {
+            out.write("API failed".getBytes());
+        }
+        debugInfo.append("\tStatus " + response.getResponseCode());
+        logger.info(debugInfo);
         out.flush();
+    }
+
+    private void delay(int delay) {
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            Thread.interrupted();
+        }
     }
 
     private void save(RecordedResponse response, MethodType methodType, RequestInfo requestInfo) throws IOException {

@@ -18,12 +18,19 @@ public class Configuration {
     private final String urlPrefix;
     private final File dataDir;
     private final boolean randomResponseOrder;
+    private final int injectFailuresAndWaitTimesPerc;
+    private final int minWaitTimeMillis;
+    private final int maxWaitTimeMillis;
     private Map<String, Integer> readCounters = new HashMap<>();
     private Map<String, Integer> writeCounters = new HashMap<>();
 
     public Configuration(ServletConfig servletConfig) {
         connectionTimeoutMillis = Integer.parseInt(servletConfig.getInitParameter("connectionTimeoutMillis"));
         maxSamples = Integer.parseInt(servletConfig.getInitParameter("maxSamples"));
+        injectFailuresAndWaitTimesPerc = Integer
+                .parseInt(servletConfig.getInitParameter("injectFailuresAndWaitTimesPerc"));
+        minWaitTimeMillis = Integer.parseInt(servletConfig.getInitParameter("minWaitTimeMillis"));
+        maxWaitTimeMillis = Integer.parseInt(servletConfig.getInitParameter("maxWaitTimeMillis"));
         recordMode = "true".equals(servletConfig.getInitParameter("recordMode"));
         randomResponseOrder = "true".equals(servletConfig.getInitParameter("randomResponseOrder"));
         dataDir = new File(servletConfig.getInitParameter("dataDir"));
@@ -90,6 +97,33 @@ public class Configuration {
 
     public boolean isRandomResponseOrder() {
         return randomResponseOrder;
+    }
+
+    public int getInjectFailuresAndWaitTimesPerc() {
+        return injectFailuresAndWaitTimesPerc;
+    }
+
+    public int getRandomFailuresAndWaitTimesPerc() {
+        if (injectFailuresAndWaitTimesPerc > 0) {
+            Random random = new Random();
+            int value = random.nextInt(100);
+            if (value <= injectFailuresAndWaitTimesPerc) {
+                int delay = random.nextInt(maxWaitTimeMillis - minWaitTimeMillis);
+                if (delay == 0) {
+                    delay = random.nextInt(1000);
+                }
+                return delay + minWaitTimeMillis;
+            }
+        }
+        return 0;
+    }
+
+    public int getMinWaitTimeMillis() {
+        return minWaitTimeMillis;
+    }
+
+    public int getMaxWaitTimeMillis() {
+        return maxWaitTimeMillis;
     }
 
     @Override
