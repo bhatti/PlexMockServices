@@ -131,7 +131,12 @@ contents:
 ```
 
 ## Dynamic Velocity output files
-Here is an example of response that is saved in YAML format for easy editing:
+Here is an example of response that is saved in YAML/Velocity format, you can
+refer http://velocity.apache.org/engine/1.7/user-guide.html for the syntax
+of velocity tags. 
+Note: PlexMockServices will automatically register all parameters as velcoity
+variables so that you can refer them in the template easily.
+
 ```vm
 ---
 responseCode: #if($!{$mockRC}) 200 #else $mockRC
