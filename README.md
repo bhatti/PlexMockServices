@@ -167,7 +167,7 @@ variables so that you can refer them in the template easily.
 
 ```vm
 ---
-responseCode: #if($!{$mockRC}) 200 #else $mockRC
+responseCode: #if($!{$mockResponseCode}) 200 #else $mockResponseCode
 #end
 headers: {}
 contentType: "application/json; charset=utf-8"
@@ -230,9 +230,9 @@ and it would return
 	}
 }
 ```
-You can then mimick failure by passing mockRC, e.g.
+You can then mimick failure by passing mockResponseCode, e.g.
 ```bash 
-curl -v -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack&mockRC=404'
+curl -v -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack&mockResponseCode=404'
 ```
 This would return 404 return code.
 ## Sample App
