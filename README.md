@@ -2,6 +2,16 @@
 
 PlexMockServices offers a mock service for proxying into REST SERVICES and offering record/play/canned results.
 
+## Features:
+- Record API response in easy to manage YAML files 
+- Playback YAML stored responses 
+- Support for sequential or random responses when there are multiple response
+  files for a given request.
+- Define dynamic responses using Velocity templates so that you can return
+  responses based on the request parameters or other factors.
+- Inject random failures and delays 
+- Specify response codes/delays in the request 
+
 ## Requirements:
 - Java 1.6+
 - Gradle
