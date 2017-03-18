@@ -8,84 +8,84 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.plexobject.mock.util.JSONUtils;
 
 public class RecordedResponse {
-	private transient int responseCode;
-	private Map<String, String> headers;
-	private String contentType;
-	private String contentClass;
-	private Object contents;
+    private transient int responseCode;
+    private Map<String, String> headers;
+    private String contentType;
+    private String contentClass;
+    private Object contents;
 
-	public RecordedResponse() {
-	}
+    public RecordedResponse() {
+    }
 
-	public RecordedResponse(int responseCode, String contentType, Map<String, String> headers, Object contents) {
-		this.responseCode = responseCode;
-		this.contentType = contentType;
-		this.headers = headers;
-		this.contents = contents;
-	}
+    public RecordedResponse(int responseCode, String contentType, Map<String, String> headers, Object contents) {
+        this.responseCode = responseCode;
+        this.contentType = contentType;
+        this.headers = headers;
+        this.contents = contents;
+    }
 
-	@JsonIgnore
-	public boolean isJson() {
-		return contentType != null && contentType.startsWith("application/json");
-	}
+    @JsonIgnore
+    public boolean isJson() {
+        return contentType != null && contentType.startsWith("application/json");
+    }
 
-	public int getResponseCode() {
-		return responseCode;
-	}
+    public int getResponseCode() {
+        return responseCode;
+    }
 
-	public void setResponseCode(int responseCode) {
-		this.responseCode = responseCode;
-	}
+    public void setResponseCode(int responseCode) {
+        this.responseCode = responseCode;
+    }
 
-	public Object getContents() {
-		return contents;
-	}
+    public Object getContents() {
+        return contents;
+    }
 
-	public void setContents(Object contents) {
-		this.contents = contents;
-	}
+    public void setContents(Object contents) {
+        this.contents = contents;
+    }
 
-	public String getContentType() {
-		return contentType;
-	}
+    public String getContentType() {
+        return contentType;
+    }
 
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
-	}
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
 
-	public Map<String, String> getHeaders() {
-		return headers;
-	}
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
 
-	public String getContentClass() {
-		return contentClass;
-	}
+    public String getContentClass() {
+        return contentClass;
+    }
 
-	public void setContentClass(String contentClass) {
-		this.contentClass = contentClass;
-	}
+    public void setContentClass(String contentClass) {
+        this.contentClass = contentClass;
+    }
 
-	public void setHeaders(Map<String, String> headers) {
-		this.headers = headers;
-	}
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+    }
 
-	public void unmarshalJsonContents() throws IOException {
-		if (isJson() && getContents() instanceof String) {
-			String json = (String) getContents();
-			if (json.startsWith("{")) {
-				setContentClass(Map.class.getName());
-				setContents(JSONUtils.unmarshal(json, Map.class));
-			} else if (json.startsWith("[")) {
-				setContentClass(List.class.getName());
-				setContents(JSONUtils.unmarshal(json, List.class));
-			}
-		}
-	}
+    public void unmarshalJsonContents() throws IOException {
+        if (isJson() && getContents() instanceof String) {
+            String json = (String) getContents();
+            if (json.startsWith("{")) {
+                setContentClass(Map.class.getName());
+                setContents(JSONUtils.unmarshal(json, Map.class));
+            } else if (json.startsWith("[")) {
+                setContentClass(List.class.getName());
+                setContents(JSONUtils.unmarshal(json, List.class));
+            }
+        }
+    }
 
-	public void marshalJsonContents() throws IOException {
-		if (getContentClass() != null && getContents() != null) {
-			String json = JSONUtils.marshal(getContents());
-			setContents(json);
-		}
-	}
+    public void marshalJsonContents() throws IOException {
+        if (getContentClass() != null && getContents() != null) {
+            String json = JSONUtils.marshal(getContents());
+            setContents(json);
+        }
+    }
 }
