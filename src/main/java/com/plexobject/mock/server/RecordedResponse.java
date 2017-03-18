@@ -1,21 +1,32 @@
 package com.plexobject.mock.server;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.plexobject.mock.util.JSONUtils;
+
 public class RecordedResponse {
-	transient int responseCode;
-	Map<String, String> headers;
-	String contentType;
-	Object payload;
+	private transient int responseCode;
+	private Map<String, String> headers;
+	private String contentType;
+	private String contentClass;
+	private Object contents;
 
 	public RecordedResponse() {
 	}
 
-	public RecordedResponse(int responseCode, String contentType, Map<String, String> headers, Object payload) {
+	public RecordedResponse(int responseCode, String contentType, Map<String, String> headers, Object contents) {
 		this.responseCode = responseCode;
 		this.contentType = contentType;
 		this.headers = headers;
-		this.payload = payload;
+		this.contents = contents;
+	}
+
+	@JsonIgnore
+	public boolean isJson() {
+		return contentType != null && contentType.startsWith("application/json");
 	}
 
 	public int getResponseCode() {
@@ -26,12 +37,12 @@ public class RecordedResponse {
 		this.responseCode = responseCode;
 	}
 
-	public Object getPayload() {
-		return payload;
+	public Object getContents() {
+		return contents;
 	}
 
-	public void setPayload(Object payload) {
-		this.payload = payload;
+	public void setContents(Object contents) {
+		this.contents = contents;
 	}
 
 	public String getContentType() {
@@ -46,8 +57,35 @@ public class RecordedResponse {
 		return headers;
 	}
 
+	public String getContentClass() {
+		return contentClass;
+	}
+
+	public void setContentClass(String contentClass) {
+		this.contentClass = contentClass;
+	}
+
 	public void setHeaders(Map<String, String> headers) {
 		this.headers = headers;
 	}
 
+	public void unmarshalJsonContents() throws IOException {
+		if (isJson() && getContents() instanceof String) {
+			String json = (String) getContents();
+			if (json.startsWith("{")) {
+				setContentClass(Map.class.getName());
+				setContents(JSONUtils.unmarshal(json, Map.class));
+			} else if (json.startsWith("[")) {
+				setContentClass(List.class.getName());
+				setContents(JSONUtils.unmarshal(json, List.class));
+			}
+		}
+	}
+
+	public void marshalJsonContents() throws IOException {
+		if (getContentClass() != null && getContents() != null) {
+			String json = JSONUtils.marshal(getContents());
+			setContents(json);
+		}
+	}
 }

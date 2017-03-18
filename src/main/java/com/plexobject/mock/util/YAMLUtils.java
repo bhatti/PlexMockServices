@@ -10,7 +10,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public class YAMLUtils {
 	private static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-	public String marshal(Object value) throws IOException {
+	public static String marshal(Object value) throws IOException {
 		try {
 			return mapper.writeValueAsString(value);
 		} catch (JsonProcessingException e) {

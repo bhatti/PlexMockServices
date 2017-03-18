@@ -128,27 +128,27 @@ public class Server extends HttpServlet {
 			logger.info(methodType + " RECORDING " + requestInfo);
 
 			response = invokeRemoteAPI(methodType, requestInfo);
-			save(response, requestInfo.requestId, methodType);
+			save(response, requestInfo.getRequestId(), methodType);
 		} else {
-			response = read(requestInfo.requestId, methodType);
+			response = read(requestInfo.getRequestId(), methodType);
 			logger.info(methodType + " PLAYING " + requestInfo);
 		}
 
 		//
 		if (response == null) {
-			res.sendError(500, "Failed to find response for " + requestInfo.url);
+			res.sendError(500, "Failed to find response for " + requestInfo.getUrl());
 			return;
 		}
-		res.setContentType(response.contentType);
+		res.setContentType(response.getContentType());
 		OutputStream out = res.getOutputStream();
-		if (response.payload instanceof byte[]) {
-			out.write(((byte[]) response.payload));
-		} else if (response.payload instanceof String) {
-			out.write(((String) response.payload).getBytes());
-		} else if (response.payload != null) {
-			out.write(response.payload.toString().getBytes());
+		if (response.getContents() instanceof byte[]) {
+			out.write(((byte[]) response.getContents()));
+		} else if (response.getContents() instanceof String) {
+			out.write(((String) response.getContents()).getBytes());
+		} else if (response.getContents() != null) {
+			out.write(response.getContents().toString().getBytes());
 		}
-		logger.debug(methodType + " SENDING " + requestInfo.requestId + ", response " + response.payload);
+		logger.debug(methodType + " SENDING " + requestInfo.getRequestId() + ", response " + response.getContentType());
 
 		out.flush();
 	}
@@ -159,42 +159,41 @@ public class Server extends HttpServlet {
 		HttpMethodBase method = null;
 		switch (methodType) {
 		case GET:
-			method = new GetMethod(requestInfo.url);
+			method = new GetMethod(requestInfo.getUrl());
 			break;
 		case POST:
-			method = new PostMethod(requestInfo.url);
-			if (requestInfo.content != null) {
+			method = new PostMethod(requestInfo.getUrl());
+			if (requestInfo.getContent() != null) {
 				((EntityEnclosingMethod) method).setRequestEntity(
-						new StringRequestEntity(requestInfo.content, requestInfo.contentType, "UTF-8"));
+						new StringRequestEntity(requestInfo.getContent(), requestInfo.getContentType(), "UTF-8"));
 			}
 			break;
 		case PUT:
-			method = new PutMethod(requestInfo.url);
-			if (requestInfo.content != null) {
+			method = new PutMethod(requestInfo.getUrl());
+			if (requestInfo.getContent() != null) {
 				((EntityEnclosingMethod) method).setRequestEntity(
-						new StringRequestEntity(requestInfo.content, requestInfo.contentType, "UTF-8"));
+						new StringRequestEntity(requestInfo.getContent(), requestInfo.getContentType(), "UTF-8"));
 			}
 			break;
 		case DELETE:
-			method = new DeleteMethod(requestInfo.url);
+			method = new DeleteMethod(requestInfo.getUrl());
 			break;
 		case HEAD:
-			method = new HeadMethod(requestInfo.url);
+			method = new HeadMethod(requestInfo.getUrl());
 			break;
 		default:
 			return null;
 		}
-		return execute(requestInfo.url, method, requestInfo.headers, requestInfo.params);
+		return execute(method, requestInfo);
 	}
 
-	private RecordedResponse execute(final String url, final HttpMethodBase method, Map<String, String> headers,
-			final Map<java.lang.String, java.lang.String[]> params) throws IOException {
+	private RecordedResponse execute(final HttpMethodBase method, final RequestInfo requestInfo) throws IOException {
 		try {
-			for (Map.Entry<String, String> h : headers.entrySet()) {
+			for (Map.Entry<String, String> h : requestInfo.getHeaders().entrySet()) {
 				method.setRequestHeader(h.getKey(), h.getValue());
 			}
-			if (params != null && method instanceof PostMethod) {
-				for (Map.Entry<String, String[]> e : params.entrySet()) {
+			if (requestInfo.getParams() != null && method instanceof PostMethod) {
+				for (Map.Entry<String, String[]> e : requestInfo.getParams().entrySet()) {
 					for (String v : e.getValue()) {
 						if (e.getKey() != null && v != null) {
 							((PostMethod) method).addParameter(e.getKey().trim(), v.trim());
@@ -204,7 +203,8 @@ public class Server extends HttpServlet {
 			}
 			final int sc = httpClient.executeMethod(method);
 			if (!isValidResponse(sc)) {
-				logger.error("Unexpected status code: " + sc + ": " + method.getStatusText() + " -- " + url);
+				logger.error("Unexpected status code: " + sc + ": " + method.getStatusText() + " -- "
+						+ requestInfo.getUrl());
 			}
 			String contents = method.getResponseBodyAsString();
 			String type = method.getResponseHeader("Content-Type").getValue();
@@ -269,6 +269,7 @@ public class Server extends HttpServlet {
 	}
 
 	private void save(RecordedResponse response, String url, MethodType methodType) throws IOException {
+		response.unmarshalJsonContents();
 		File path = toFile(url, methodType, false);
 		YAMLUtils.write(path, response);
 	}
@@ -278,7 +279,14 @@ public class Server extends HttpServlet {
 		if (path == null) {
 			return null;
 		}
-		return (RecordedResponse) YAMLUtils.read(path, RecordedResponse.class);
+		try {
+			RecordedResponse resp = (RecordedResponse) YAMLUtils.read(path, RecordedResponse.class);
+			resp.marshalJsonContents();
+			return resp;
+		} catch (Exception e) {
+			logger.warn("resp.read failed", e);
+			throw new IOException(e);
+		}
 	}
 
 	private boolean isValidResponse(int responseCode) {

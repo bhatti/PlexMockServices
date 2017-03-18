@@ -12,12 +12,12 @@ import com.plexobject.mock.util.FileUtils;
 public class RequestInfo {
 	private static final String REQUEST_ID = "requestId";
 
-	final String requestId;
-	final String url;
-	final String contentType;
-	final Map<java.lang.String, java.lang.String> headers;
-	final Map<java.lang.String, java.lang.String[]> params;
-	final String content;
+	private final String requestId;
+	private final String url;
+	private final String contentType;
+	private final Map<java.lang.String, java.lang.String> headers;
+	private final Map<java.lang.String, java.lang.String[]> params;
+	private final String content;
 
 	RequestInfo(final String urlPrefix, final HttpServletRequest req) throws IOException {
 		url = urlPrefix + getPath(req);
@@ -27,6 +27,30 @@ public class RequestInfo {
 		byte[] data = FileUtils.read(req.getInputStream());
 		content = data.length > 0 ? new String(data) : null;
 		requestId = getRequestId(req, url, req.getParameterMap(), null);
+	}
+
+	public String getRequestId() {
+		return requestId;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public Map<java.lang.String, java.lang.String> getHeaders() {
+		return headers;
+	}
+
+	public Map<java.lang.String, java.lang.String[]> getParams() {
+		return params;
+	}
+
+	public String getContent() {
+		return content;
 	}
 
 	@Override
