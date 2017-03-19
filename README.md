@@ -26,7 +26,7 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and saves
 - Checkout code from 
 * git clone git@github.com:bhatti/PlexMockServices.git
 - Building
-* gradle compile
+* ./gradlew compile
 
 ## Configuring:
 - Edit src/main/webapp/WEB-INF/web.xml 
@@ -79,6 +79,8 @@ You can configure minWaitTimeMillis and maxWaitTimeMillis for minimum/maximum wa
 Note: It's recommended that you use deploy mock service as root context so mapping of service paths is simple.
 
 ## Testing
+### Start server
+- ./gradlew runApp
 ### Record Mode
 ```bash
   curl -X POST http://localhost:8181/myservice?mockMode=record -H 'Content-Type: application/json' -d {'json':true}
@@ -194,7 +196,7 @@ contents:
 ```
 
 You can then call a curl request such as:
-curl -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=name_prefix'
+curl -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack'
 and it would return
 ```json
 {
