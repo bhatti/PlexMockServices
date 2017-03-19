@@ -1,6 +1,6 @@
-# PlexMockServices - Mock Services for REST SERVICES 
+# PlexMockServices - Mocking REST SERVICES 
 
-PlexMockServices offers a mock service for proxying into REST SERVICES and offering record/play/canned results.
+PlexMockServices offers a mock service for proxying into REST SERVICES and saves responses. You can then playback those services using recorded/canned results. You can also interject random failures and delays and thus test robustness of your client side connection.
 
 ## Features:
 - Record API response in easy to manage YAML files 
@@ -24,10 +24,13 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and offer
 
 ## Building
 - Checkout code from 
-* git clone git@github.com:bhatti/PlexMockServices.git
+```bash
+git clone git@github.com:bhatti/PlexMockServices.git
+```
 - Building
-* gradle compile
-
+```bash
+./gradlew compile
+```
 ## Configuring:
 - Edit src/main/webapp/WEB-INF/web.xml 
 * Specify default recordMode
@@ -79,6 +82,10 @@ You can configure minWaitTimeMillis and maxWaitTimeMillis for minimum/maximum wa
 Note: It's recommended that you use deploy mock service as root context so mapping of service paths is simple.
 
 ## Testing
+### Start server
+```bash
+./gradlew war appRun
+```
 ### Record Mode
 ```bash
   curl -X POST http://localhost:8181/myservice?mockMode=record -H 'Content-Type: application/json' -d {'json':true}
@@ -194,7 +201,7 @@ contents:
 ```
 
 You can then call a curl request such as:
-curl -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=name_prefix'
+curl -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack'
 and it would return
 ```json
 {
@@ -248,7 +255,7 @@ This would return 404 return code.
 ## Sample App
 After starting server by:
 ```bash 
-./server.sh
+./gradlew war appRun
 ```
 
 You can find a sample REST app based on node.js restify under sample folder, which you can start by running 
