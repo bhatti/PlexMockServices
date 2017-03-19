@@ -11,9 +11,17 @@ import com.plexobject.mock.util.FileUtils;
 
 public class RequestInfo {
     private static final String MOCK_USE_HASH = "mockUseHash";
+    private static final String RECORD = "record";
+    private static final String MOCK_MODE = "mockMode";
     private static final String REQUEST_ID = "requestId";
     private static final String MOCK_WAIT_TIME_MILLIS = "mockWaitTimeMillis";
     private static final String MOCK_RESPONSE_CODE = "mockResponseCode";
+    //
+    private static final String XMOCK_MODE = "XMockMode";
+    private static final String XREQUEST_ID = "XRequestId";
+    private static final String XMOCK_WAIT_TIME_MILLIS = "XMockWaitTimeMillis";
+    private static final String XMOCK_RESPONSE_CODE = "XMockResponseCode";
+
     private final boolean useHash;
     private final String requestId;
     private final String url;
@@ -23,10 +31,11 @@ public class RequestInfo {
     private final String content;
     private final int mockWaitTimeMillis;
     private final int mockResponseCode;
+    private final boolean recordMode;
 
-    public RequestInfo(final String urlPrefix, final HttpServletRequest req) throws IOException {
+    public RequestInfo(final HttpServletRequest req, Configuration config) throws IOException {
         String path = getPath(req);
-        url = urlPrefix + path;
+        url = config.getUrlPrefix() + path;
         contentType = req.getContentType();
         headers = toHeaders(req);
         params = req.getParameterMap();
@@ -34,17 +43,14 @@ public class RequestInfo {
         byte[] data = FileUtils.read(req.getInputStream());
         content = data.length > 0 ? new String(data) : null;
         requestId = getRequestId(req, path, req.getParameterMap(), null);
-        mockWaitTimeMillis = getInteger(MOCK_WAIT_TIME_MILLIS, params);
-        mockResponseCode = getInteger(MOCK_RESPONSE_CODE, params);
+        mockWaitTimeMillis = getInteger(req, MOCK_WAIT_TIME_MILLIS, XMOCK_WAIT_TIME_MILLIS);
+        mockResponseCode = getInteger(req, MOCK_RESPONSE_CODE, XMOCK_RESPONSE_CODE);
+        recordMode = isRecordMode(req, config);
     }
 
-    private static int getInteger(String name, Map<java.lang.String, java.lang.String[]> params) {
-        String[] value = params.get(name);
-        if (value != null && value.length > 0) {
-            return Integer.parseInt(value[0]);
-        } else {
-            return 0;
-        }
+    private static int getInteger(HttpServletRequest req, String paramKey, String headerKey) {
+        String value = getValue(req, paramKey, headerKey, "0");
+        return Integer.parseInt(value);
     }
 
     public String getRequestId() {
@@ -57,6 +63,10 @@ public class RequestInfo {
 
     public int getMockResponseCode() {
         return mockResponseCode;
+    }
+
+    public boolean isRecordMode() {
+        return recordMode;
     }
 
     public String getUrl() {
@@ -95,19 +105,39 @@ public class RequestInfo {
         return req.getQueryString() == null ? req.getRequestURI() : req.getRequestURI() + "?" + req.getQueryString();
     }
 
+    private static String getValue(HttpServletRequest req, String paramKey, String headerKey, String defValue) {
+        String value = req.getParameter(paramKey);
+        if (value == null) {
+            value = req.getHeader(headerKey);
+        }
+        if (value == null) {
+            value = defValue;
+        }
+        return value;
+    }
+
+    private static boolean isRecordMode(HttpServletRequest req, Configuration config) {
+        String reqMode = getValue(req, MOCK_MODE, XMOCK_MODE, null);
+        return reqMode != null ? RECORD.equalsIgnoreCase(reqMode) : config.isRecordMode();
+    }
+
     private String getRequestId(HttpServletRequest req, final String path,
             Map<java.lang.String, java.lang.String[]> params, String body) {
-        String id = "";
-        if (req.getParameter(REQUEST_ID) != null) {
-            id = req.getParameter(REQUEST_ID);
-        } else if (useHash) {
-            if (body != null) {
-                id = FileUtils.hash(body);
-            } else {
-                id = toKey(params);
-            }
+        String id = getValue(req, REQUEST_ID, XREQUEST_ID, "");
+        if (useHash) {
+            id = getIdByHash(params, body);
         }
         return path + id;
+    }
+
+    private static String getIdByHash(Map<java.lang.String, java.lang.String[]> params, String body) {
+        String id;
+        if (body != null) {
+            id = FileUtils.hash(body);
+        } else {
+            id = toKey(params);
+        }
+        return id;
     }
 
     private static Map<String, String> toHeaders(final HttpServletRequest req) {

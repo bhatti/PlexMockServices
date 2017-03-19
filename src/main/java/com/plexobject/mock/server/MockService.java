@@ -23,9 +23,6 @@ import com.plexobject.mock.util.YAMLUtils;
 public class MockService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(MockService.class);
-    private static final String RECORD = "record";
-    private static final String MOCK_MODE = "mockMode";
-    private static final String XMOCK_MODE = "XMockMode";
 
     private Configuration config;
     private HTTPUtils httpUtils;
@@ -68,22 +65,14 @@ public class MockService extends HttpServlet {
 
     //////////////////// PRIVATE METHODS //////////////////
 
-    private boolean isRecordMode(HttpServletRequest req) {
-        String reqMode = req.getParameter(MOCK_MODE);
-        if (reqMode == null) {
-            reqMode = req.getHeader(XMOCK_MODE);
-        }
-        return reqMode != null ? RECORD.equalsIgnoreCase(reqMode) : config.isRecordMode();
-    }
-
     private void doService(HttpServletRequest req, HttpServletResponse res, MethodType methodType)
             throws ServletException, IOException {
-        RequestInfo requestInfo = new RequestInfo(config.getUrlPrefix(), req);
+        RequestInfo requestInfo = new RequestInfo(req, config);
         RecordedResponse response = null;
 
         StringBuilder debugInfo = new StringBuilder();
 
-        if (isRecordMode(req)) {
+        if (requestInfo.isRecordMode()) {
             debugInfo.append(methodType + " RECORDING " + requestInfo);
 
             response = httpUtils.invokeRemoteAPI(methodType, requestInfo);
