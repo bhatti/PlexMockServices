@@ -1,6 +1,6 @@
-# PlexMockServices - Mock Services for REST SERVICES 
+# PlexMockServices - Mocking REST SERVICES 
 
-PlexMockServices offers a mock service for proxying into REST SERVICES and offering record/play/canned results.
+PlexMockServices offers a mock service for proxying into REST SERVICES and saves responses. You can then playback those services using recorded/canned results. You can also interject random failures and delays and thus test robustness of your client side connection.
 
 ## Features:
 - Record API response in easy to manage YAML files 
