@@ -24,10 +24,13 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and saves
 
 ## Building
 - Checkout code from 
-* git clone git@github.com:bhatti/PlexMockServices.git
+```bash
+git clone git@github.com:bhatti/PlexMockServices.git
+```
 - Building
-* ./gradlew compile
-
+```bash
+./gradlew compile
+```
 ## Configuring:
 - Edit src/main/webapp/WEB-INF/web.xml 
 * Specify default recordMode
@@ -80,7 +83,9 @@ Note: It's recommended that you use deploy mock service as root context so mappi
 
 ## Testing
 ### Start server
-- ./gradlew runApp
+```bash
+./gradlew war appRun
+```
 ### Record Mode
 ```bash
   curl -X POST http://localhost:8181/myservice?mockMode=record -H 'Content-Type: application/json' -d {'json':true}
@@ -250,7 +255,7 @@ This would return 404 return code.
 ## Sample App
 After starting server by:
 ```bash 
-./server.sh
+./gradlew war appRun
 ```
 
 You can find a sample REST app based on node.js restify under sample folder, which you can start by running 
