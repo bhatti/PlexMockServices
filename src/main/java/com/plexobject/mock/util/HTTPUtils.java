@@ -1,6 +1,7 @@
 package com.plexobject.mock.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,7 +93,13 @@ public class HTTPUtils {
                 }
             }
             final int sc = httpClient.executeMethod(method);
-            byte[] data = FileUtils.read(method.getResponseBodyAsStream());
+            InputStream in = method.getResponseBodyAsStream();
+            byte[] data = null;
+            if (in != null) {
+                data = FileUtils.read(in);
+            } else {
+                data = new byte[0];
+            }
             String type = method.getResponseHeader(CONTENT_TYPE).getValue();
 
             return new ResponseInfo(sc, type, toResponseHeaders(method), data, requestInfo.getConfig());

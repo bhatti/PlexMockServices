@@ -55,9 +55,9 @@
             <param-name>saveRawRequestResponses</param-name> 
             <param-value>true</param-value> 
         </init-param>
-        <!-- save JSON responses only -->
+        <!-- save API responses only -->
         <init-param>
-            <param-name>saveJsonResponsesOnly</param-name> 
+            <param-name>saveAPIResponsesOnly</param-name> 
             <param-value>true</param-value> 
         </init-param>
         <!-- defaultExportFormat can be YAML, JSON, Velocity or Thymeleaf -->

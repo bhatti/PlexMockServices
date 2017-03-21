@@ -28,8 +28,10 @@ public class ResponseInfo implements SerializationLifecycle {
     }
 
     @JsonIgnore
-    public boolean isJson() {
-        return contentType != null && contentType.startsWith("application/json");
+    public boolean isAPIContentType() {
+        return contentType != null && (contentType.startsWith("application/json")
+                || contentType.startsWith("application/x-www-form-urlencoded")
+                || contentType.startsWith("multipart/form-data"));
     }
 
     @JsonIgnore
@@ -79,7 +81,7 @@ public class ResponseInfo implements SerializationLifecycle {
 
     @Override
     public void beforeSerialize() throws IOException {
-        if (isJson() && getContents() instanceof byte[] && config.isUnserializeJsonContentBeforeSave()) {
+        if (isAPIContentType() && getContents() instanceof byte[] && config.isUnserializeJsonContentBeforeSave()) {
             String json = new String((byte[]) getContents());
             if (json.startsWith("{")) {
                 setContentClass(Map.class.getName());

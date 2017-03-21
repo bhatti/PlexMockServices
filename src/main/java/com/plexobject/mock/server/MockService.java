@@ -69,10 +69,12 @@ public class MockService extends HttpServlet {
         StringBuilder debugInfo = new StringBuilder();
 
         if (requestInfo.isRecordMode()) {
-            debugInfo.append(methodType + " RECORDING " + requestInfo);
-
             response = httpUtils.invokeRemoteAPI(methodType, requestInfo);
-            save(methodType, requestInfo, response);
+            if (save(methodType, requestInfo, response)) {
+                debugInfo.append(methodType + " RECORDING " + requestInfo);
+            } else {
+                debugInfo.append(methodType + " REDIRECTING " + requestInfo);
+            }
         } else {
             response = read(methodType, requestInfo);
             debugInfo.append(methodType + " PLAYING " + requestInfo);
@@ -132,9 +134,9 @@ public class MockService extends HttpServlet {
         }
     }
 
-    private void save(MethodType methodType, RequestInfo requestInfo, ResponseInfo responseInfo) throws IOException {
-        if (config.isSaveJsonResponsesOnly() && !requestInfo.isJson()) {
-            return;
+    private boolean save(MethodType methodType, RequestInfo requestInfo, ResponseInfo responseInfo) throws IOException {
+        if (config.isSaveAPIResponsesOnly() && !requestInfo.isAPIContentType()) {
+            return false;
         }
         File path = config.toFile(requestInfo.getRequestId(), methodType, false);
         config.getDefaultExportFormat().write(path, responseInfo);
@@ -142,6 +144,7 @@ public class MockService extends HttpServlet {
             ExportFormat.JSON.write(config.getNextIOCounterFile(requestInfo.getRequestId(), methodType),
                     new RequestResponse(requestInfo, responseInfo));
         }
+        return true;
     }
 
     private ResponseInfo read(MethodType methodType, RequestInfo requestInfo) throws IOException {

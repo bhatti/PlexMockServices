@@ -47,7 +47,7 @@ public class RequestInfo {
         params = req.getParameterMap();
         useHash = "true".equals(params.get(MOCK_USE_HASH));
         byte[] data = FileUtils.read(req.getInputStream());
-        content = data.length > 0 && isJson() ? new String(data) : data;
+        content = data.length > 0 && isAPIContentType() ? new String(data) : data;
         requestId = getRequestId(req, path, req.getParameterMap(), null);
         mockWaitTimeMillis = getInteger(req, MOCK_WAIT_TIME_MILLIS, XMOCK_WAIT_TIME_MILLIS);
         mockResponseCode = getInteger(req, MOCK_RESPONSE_CODE, XMOCK_RESPONSE_CODE);
@@ -55,8 +55,10 @@ public class RequestInfo {
     }
 
     @JsonIgnore
-    public boolean isJson() {
-        return contentType != null && contentType.startsWith("application/json");
+    public boolean isAPIContentType() {
+        return contentType != null && (contentType.startsWith("application/json")
+                || contentType.startsWith("application/x-www-form-urlencoded")
+                || contentType.startsWith("multipart/form-data"));
     }
 
     @JsonIgnore
@@ -108,7 +110,7 @@ public class RequestInfo {
     @Override
     @JsonIgnore
     public String toString() {
-        StringBuilder sb = new StringBuilder(url + ", ID=" + requestId + "\n");
+        StringBuilder sb = new StringBuilder(url + ", Content-Type=" + contentType + ", ID=" + requestId + "\n");
         if (params != null) {
             sb.append("\tParams: " + params + "\n");
         }

@@ -17,7 +17,7 @@ public class Configuration {
     private final boolean randomResponseOrder;
     private final boolean saveRawRequestResponses;
     private final boolean unserializeJsonContentBeforeSave;
-    private final boolean saveJsonResponsesOnly;
+    private final boolean saveAPIResponsesOnly;
     private final int injectFailuresAndWaitTimesPerc;
     private final int minWaitTimeMillis;
     private final int maxWaitTimeMillis;
@@ -35,7 +35,7 @@ public class Configuration {
         recordMode = "true".equals(getString(servletConfig, "recordMode", "true"));
         randomResponseOrder = "true".equals(getString(servletConfig, "randomResponseOrder", "false"));
         saveRawRequestResponses = "true".equals(getString(servletConfig, "saveRawRequestResponses", "false"));
-        saveJsonResponsesOnly = "true".equals(getString(servletConfig, "saveJsonResponsesOnly", "false"));
+        saveAPIResponsesOnly = "true".equals(getString(servletConfig, "saveAPIResponsesOnly", "false"));
         unserializeJsonContentBeforeSave = "true"
                 .equals(getString(servletConfig, "unserializeJsonContentBeforeSave", "false"));
         dataDir = new File(getString(servletConfig, "dataDir", "data"));
@@ -217,7 +217,7 @@ public class Configuration {
         return unserializeJsonContentBeforeSave;
     }
 
-    public boolean isSaveJsonResponsesOnly() {
-        return saveJsonResponsesOnly;
+    public boolean isSaveAPIResponsesOnly() {
+        return saveAPIResponsesOnly;
     }
 }
