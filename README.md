@@ -3,11 +3,11 @@
 PlexMockServices offers a mock service for proxying into REST SERVICES and saves responses. You can then playback those services using recorded/canned results. You can also interject random failures and delays and thus test robustness of your client side connection.
 
 ## Features:
-- Record API response in easy to manage YAML files 
-- Playback YAML stored responses 
+- Record API response in easy to manage YAML/JSON files 
+- Playback YAML/JSON stored responses 
 - Support for sequential or random responses when there are multiple response
   files for a given request.
-- Define dynamic responses using Velocity templates so that you can return
+- Define dynamic responses using Velocity or Thymeleaf templates so that you can return
   responses based on the request parameters or other factors.
 - Inject random failures and delays 
 - Specify response codes/delays in the request 
@@ -40,6 +40,15 @@ git clone git@github.com:bhatti/PlexMockServices.git
             <param-value>true</param-value> 
         </init-param>
 ```
+
+- Specify format of export files:
+```xml
+        <init-param>
+            <param-name>defaultExportFormat</param-name> 
+            <param-value>YAML</param-value> 
+        </init-param>
+```
+Note: You can specify YAML, JSON, Velocity or Thymeleaf format.
 
 - Specify order of response
 ```xml
@@ -175,7 +184,7 @@ contents:
 ```
 
 ## Dynamic Velocity output files
-Here is an example of response that is saved in YAML/Velocity format, you can
+Here is an example of response that is saved in velocity template format, you can
 refer http://velocity.apache.org/engine/1.7/user-guide.html for the syntax
 of velocity tags. 
 
@@ -252,6 +261,39 @@ You can then mimick failure by passing mockResponseCode, e.g.
 curl -v -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack&mockResponseCode=404'
 ```
 This would return 404 return code.
+
+## Dynamic Thymeleaf output files
+Here is an example of response that is saved in thymeleaf template format, you can
+refer http://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html for the syntax
+of Thymeleaf tags. 
+
+Note: PlexMockServices will automatically register all parameters as Thymeleaf
+variables so that you can refer them in the template easily.
+
+```th 
+---
+responseCode: [(${mockResponseCode}? ${mockResponseCode} : 200)]
+headers: {}
+contentType: "application/json; charset=utf-8"
+contentClass: "java.util.Map"
+contents: 
+[# th:each="i : ${#numbers.sequence(1,10)}"]
+  "[(${i})]":
+    name: "[(${name})] [(${i})]"
+    id: [(${i})] 
+[/]
+```
+
+You can run curl command such as: 
+```bash
+curl -H Content-Type: application/json -H "XMockMode: play" 'http://localhost:8080?name=bob' 
+```
+to response as above or 
+```bash
+curl -v -H Content-Type: application/json -H "XMockMode: play" 'http://localhost:8080?name=bob&mockResponseCode=400'
+```
+to simulate error response.
+
 ## Sample App
 After starting server by:
 ```bash 

@@ -9,9 +9,6 @@ import java.util.Random;
 import javax.servlet.ServletConfig;
 
 public class Configuration {
-    public static final String YAML = ".yml";
-    public static final String VELOCITY = ".vm";
-
     private final int maxSamples;
     private final int connectionTimeoutMillis;
     private final boolean recordMode;
@@ -21,19 +18,21 @@ public class Configuration {
     private final int injectFailuresAndWaitTimesPerc;
     private final int minWaitTimeMillis;
     private final int maxWaitTimeMillis;
+    private final ExportFormat defaultExportFormat;
     private Map<String, Integer> readCounters = new HashMap<>();
     private Map<String, Integer> writeCounters = new HashMap<>();
 
     public Configuration(ServletConfig servletConfig) {
-        connectionTimeoutMillis = Integer.parseInt(servletConfig.getInitParameter("connectionTimeoutMillis"));
-        maxSamples = Integer.parseInt(servletConfig.getInitParameter("maxSamples"));
-        injectFailuresAndWaitTimesPerc = Integer
-                .parseInt(servletConfig.getInitParameter("injectFailuresAndWaitTimesPerc"));
-        minWaitTimeMillis = Integer.parseInt(servletConfig.getInitParameter("minWaitTimeMillis"));
-        maxWaitTimeMillis = Integer.parseInt(servletConfig.getInitParameter("maxWaitTimeMillis"));
-        recordMode = "true".equals(servletConfig.getInitParameter("recordMode"));
-        randomResponseOrder = "true".equals(servletConfig.getInitParameter("randomResponseOrder"));
-        dataDir = new File(servletConfig.getInitParameter("dataDir"));
+        connectionTimeoutMillis = getInteger(servletConfig, "connectionTimeoutMillis");
+        maxSamples = getInteger(servletConfig, "maxSamples");
+        injectFailuresAndWaitTimesPerc = getInteger(servletConfig, "injectFailuresAndWaitTimesPerc");
+        minWaitTimeMillis = getInteger(servletConfig, "minWaitTimeMillis");
+        maxWaitTimeMillis = getInteger(servletConfig, "maxWaitTimeMillis");
+        recordMode = "true".equals(getString(servletConfig, "recordMode", "true"));
+        randomResponseOrder = "true".equals(getString(servletConfig, "randomResponseOrder", "false"));
+        dataDir = new File(getString(servletConfig, "dataDir", "data"));
+        defaultExportFormat = ExportFormat
+                .valueOf(getString(servletConfig, "defaultExportFormat", "YAML").toUpperCase());
         dataDir.mkdirs();
 
         urlPrefix = getUrlPrefix(servletConfig);
@@ -57,22 +56,27 @@ public class Configuration {
                 return files != null && files.length > 0 ? files[random.nextInt(files.length)] : null;
             } else {
                 int counter = getNextCounter(readCounters, name);
-                File yamlFile = new File(getDataDir(), name + "_" + counter + YAML);
-                File velocityFile = new File(getDataDir(), name + "_" + counter + VELOCITY);
-                if (yamlFile.exists()) {
-                    return yamlFile;
-                } else if (velocityFile.exists()) {
-                    return velocityFile;
-                } else if (counter > 1) {
-                    readCounters.remove(name);
-                    return toFile(url, methodType, readOnly);
-                }
-                return null;
+                return getFileIfExists(name, counter);
             }
         } else {
             int counter = getNextCounter(writeCounters, name);
-            return new File(getDataDir(), name + "_" + counter + YAML);
+            return new File(getDataDir(), name + "_" + counter + getDefaultExportFormat().getExtension());
         }
+    }
+
+    private File getFileIfExists(String name, int counter) {
+        for (String ext : ExportFormat.EXTS) {
+            File file = new File(getDataDir(), name + "_" + counter + ext);
+            if (file.exists()) {
+                return file;
+            }
+        }
+        if (counter > 1) {
+            counter = 1;
+            readCounters.remove(name);
+            return getFileIfExists(name, counter);
+        }
+        return null;
     }
 
     public int getMaxSamples() {
@@ -126,6 +130,10 @@ public class Configuration {
         return maxWaitTimeMillis;
     }
 
+    public ExportFormat getDefaultExportFormat() {
+        return defaultExportFormat;
+    }
+
     @Override
     public String toString() {
         return "Configuration [maxSamples=" + maxSamples + ", connectionTimeoutMillis=" + connectionTimeoutMillis
@@ -169,5 +177,21 @@ public class Configuration {
             urlPrefix = urlPrefix.substring(0, urlPrefix.length() - 1);
         }
         return urlPrefix;
+    }
+
+    private static String getString(ServletConfig servletConfig, String name, String defValue) {
+        String value = servletConfig.getInitParameter(name);
+        if (value != null && value.length() > 0) {
+            return value;
+        }
+        return defValue;
+    }
+
+    private static int getInteger(ServletConfig servletConfig, String name) {
+        String value = servletConfig.getInitParameter(name);
+        if (value != null && value.length() > 0) {
+            return Integer.parseInt(value.trim());
+        }
+        return 0;
     }
 }

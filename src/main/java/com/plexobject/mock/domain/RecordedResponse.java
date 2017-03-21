@@ -7,7 +7,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.plexobject.mock.util.JSONUtils;
 
-public class RecordedResponse {
+public class RecordedResponse implements SerializationLifecycle {
     private transient int responseCode;
     private Map<String, String> headers;
     private String contentType;
@@ -74,7 +74,8 @@ public class RecordedResponse {
         this.headers = headers;
     }
 
-    public void unmarshalJsonContents() throws IOException {
+    @Override
+    public void beforeSerialize() throws IOException {
         if (isJson() && getContents() instanceof String) {
             String json = (String) getContents();
             if (json.startsWith("{")) {
@@ -87,7 +88,8 @@ public class RecordedResponse {
         }
     }
 
-    public void marshalJsonContents() throws IOException {
+    @Override
+    public void afterDeserialize() throws IOException {
         if (getContentClass() != null && getContents() != null) {
             String json = JSONUtils.marshal(getContents());
             setContents(json);

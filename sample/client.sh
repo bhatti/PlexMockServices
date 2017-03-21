@@ -5,6 +5,9 @@ else
 mockMode=$1
 fi;
 port=8080
+echo curl -H 'Content-Type: application/json' -H "XMockMode: $mockMode" http://localhost:$port 
+curl -H 'Content-Type: application/json' -H "XMockMode: $mockMode" http://localhost:$port 
+exit
 echo ""
 curl -X POST http://localhost:$port/users -H "XMockMode: $mockMode" -H 'Content-Type: application/json' -d '{ "name": "John Doe"}'
 echo "adding..."

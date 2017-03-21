@@ -44,6 +44,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.8.7'
     compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.7.3'
     compile 'org.apache.velocity:velocity:1.7'
+    compile 'org.thymeleaf:thymeleaf:3.0.3.RELEASE'
 
     compile 'commons-beanutils:commons-beanutils:1.9.1'
     compile 'com.thoughtworks.xstream:xstream:1.4.7'

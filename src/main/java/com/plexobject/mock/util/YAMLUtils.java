@@ -8,9 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public class YAMLUtils {
-    private ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-    public String marshal(Object value) throws IOException {
+    public static String marshal(Object value) throws IOException {
         try {
             return mapper.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -18,11 +18,11 @@ public class YAMLUtils {
         }
     }
 
-    public Object unmarshal(String yaml, Class<?> klass) throws IOException {
+    public static Object unmarshal(String yaml, Class<?> klass) throws IOException {
         return mapper.readValue(yaml, klass);
     }
 
-    public void write(File outputFile, Object value) throws IOException {
+    public static void write(File outputFile, Object value) throws IOException {
         try {
             mapper.writeValue(outputFile, value);
         } catch (JsonProcessingException e) {
@@ -30,11 +30,12 @@ public class YAMLUtils {
         }
     }
 
-    public Object read(File inputFile, Class<?> klass) throws IOException {
-        return mapper.readValue(inputFile, klass);
+    @SuppressWarnings("unchecked")
+    public static <T> T read(File inputFile, Class<?> klass) throws IOException {
+        return  (T) mapper.readValue(inputFile, klass);
     }
 
-    public Object read(String input, Class<?> klass) throws IOException {
+    public static Object read(String input, Class<?> klass) throws IOException {
         return mapper.readValue(input, klass);
     }
 }

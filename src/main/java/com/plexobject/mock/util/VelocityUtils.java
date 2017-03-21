@@ -27,7 +27,7 @@ public class VelocityUtils {
         props.setProperty("class.resource.loader.class",
                 "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
         props.setProperty("class.resource.loader.path", config.getDataDir().getAbsolutePath());
-
+        //
         ve = new VelocityEngine(props);
         ve.init();
     }
@@ -38,6 +38,11 @@ public class VelocityUtils {
         vc.put("params", requestInfo.getParams());
         vc.put("headers", requestInfo.getHeaders());
         vc.put("url", requestInfo.getUrl());
+        for (Map.Entry<java.lang.String, java.lang.String> e : requestInfo.getHeaders().entrySet()) {
+            if (e.getValue().length() > 0) {
+                vc.put(e.getKey(), e.getValue());
+            }
+        }
         for (Map.Entry<java.lang.String, java.lang.String[]> e : requestInfo.getParams().entrySet()) {
             if (e.getValue().length > 0) {
                 vc.put(e.getKey(), e.getValue()[0]);

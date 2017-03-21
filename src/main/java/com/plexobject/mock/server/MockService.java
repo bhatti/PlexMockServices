@@ -17,8 +17,6 @@ import com.plexobject.mock.domain.MethodType;
 import com.plexobject.mock.domain.RecordedResponse;
 import com.plexobject.mock.domain.RequestInfo;
 import com.plexobject.mock.util.HTTPUtils;
-import com.plexobject.mock.util.VelocityUtils;
-import com.plexobject.mock.util.YAMLUtils;
 
 public class MockService extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -26,15 +24,11 @@ public class MockService extends HttpServlet {
 
     private Configuration config;
     private HTTPUtils httpUtils;
-    private VelocityUtils velocityUtils;
-    private YAMLUtils yamlUtils = new YAMLUtils();
 
     public void init(ServletConfig servletConfig) throws ServletException {
         super.init(servletConfig);
         config = new Configuration(servletConfig);
         httpUtils = new HTTPUtils(config);
-        velocityUtils = new VelocityUtils(config);
-
         logger.info("INITIALIZED " + config);
     }
 
@@ -137,9 +131,8 @@ public class MockService extends HttpServlet {
     }
 
     private void save(RecordedResponse response, MethodType methodType, RequestInfo requestInfo) throws IOException {
-        response.unmarshalJsonContents();
         File path = config.toFile(requestInfo.getRequestId(), methodType, false);
-        yamlUtils.write(path, response);
+        config.getDefaultExportFormat().write(path, response);
     }
 
     private RecordedResponse read(MethodType methodType, RequestInfo requestInfo) throws IOException {
@@ -147,19 +140,7 @@ public class MockService extends HttpServlet {
         if (path == null) {
             return null;
         }
-        try {
-            RecordedResponse resp = null;
-            if (path.getName().endsWith(Configuration.YAML)) {
-                resp = (RecordedResponse) yamlUtils.read(path, RecordedResponse.class);
-            } else if (path.getName().endsWith(Configuration.VELOCITY)) {
-                String contents = velocityUtils.transform(path, requestInfo);
-                resp = (RecordedResponse) yamlUtils.read(contents, RecordedResponse.class);
-            }
-            resp.marshalJsonContents();
-            return resp;
-        } catch (Exception e) {
-            logger.warn("resp.read failed", e);
-            throw new IOException(e);
-        }
+        RecordedResponse resp = config.getDefaultExportFormat().read(path, RecordedResponse.class, requestInfo, config);
+        return resp;
     }
 }
