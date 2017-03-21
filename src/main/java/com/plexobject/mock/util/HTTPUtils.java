@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HeaderElement;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethodBase;
@@ -114,12 +113,7 @@ public class HTTPUtils {
     private Map<String, String> toResponseHeaders(final HttpMethodBase post) throws HttpException {
         Map<String, String> headers = new HashMap<>();
         for (Header h : post.getResponseHeaders()) {
-            @SuppressWarnings("deprecation")
-            HeaderElement[] e = h.getValues();
-            String value = null;
-            for (int i = 0; i < e.length; i++) {
-                value = e[i].getValue();
-            }
+            String value = h.getValue();
             if (value != null) {
                 headers.put(h.getName(), value);
             }

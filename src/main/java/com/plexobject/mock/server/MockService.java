@@ -3,6 +3,7 @@ package com.plexobject.mock.server;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -109,6 +110,9 @@ public class MockService extends HttpServlet {
         }
 
         res.setContentType(response.getContentType());
+        for (Map.Entry<String, String> e : response.getHeaders().entrySet()) {
+            res.addHeader(e.getKey(), e.getValue());
+        }
         OutputStream out = res.getOutputStream();
         if (response.isValidResponseCode()) {
             if (response.getContents() instanceof byte[]) {
