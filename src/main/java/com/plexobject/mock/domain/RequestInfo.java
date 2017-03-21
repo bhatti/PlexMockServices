@@ -1,9 +1,12 @@
 package com.plexobject.mock.domain;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -22,7 +25,7 @@ public class RequestInfo {
     private static final String XREQUEST_ID = "XRequestId";
     private static final String XMOCK_WAIT_TIME_MILLIS = "XMockWaitTimeMillis";
     private static final String XMOCK_RESPONSE_CODE = "XMockResponseCode";
-
+    private static final Set<String> SKIP_HEADERS = new HashSet<>(Arrays.asList("Accept-Encoding"));
     private final boolean useHash;
     private final String requestId;
     private final String url;
@@ -152,8 +155,10 @@ public class RequestInfo {
         Enumeration<String> names = req.getHeaderNames();
         while (names.hasMoreElements()) {
             String name = names.nextElement();
-            String value = req.getHeader(name);
-            headers.put(name, value);
+            if (!SKIP_HEADERS.contains(name)) {
+                String value = req.getHeader(name);
+                headers.put(name, value);
+            }
         }
         return headers;
     }
