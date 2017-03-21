@@ -12,6 +12,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
+import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -22,8 +23,8 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 
 import com.plexobject.mock.domain.Configuration;
 import com.plexobject.mock.domain.MethodType;
-import com.plexobject.mock.domain.ResponseInfo;
 import com.plexobject.mock.domain.RequestInfo;
+import com.plexobject.mock.domain.ResponseInfo;
 
 public class HTTPUtils {
     private static final String CONTENT_TYPE = "Content-Type";
@@ -47,17 +48,11 @@ public class HTTPUtils {
             break;
         case POST:
             method = new PostMethod(requestInfo.getUrl());
-            if (requestInfo.getContent() != null) {
-                ((EntityEnclosingMethod) method).setRequestEntity(
-                        new StringRequestEntity(requestInfo.getContent(), requestInfo.getContentType(), "UTF-8"));
-            }
+            setEntityContent(requestInfo, method);
             break;
         case PUT:
             method = new PutMethod(requestInfo.getUrl());
-            if (requestInfo.getContent() != null) {
-                ((EntityEnclosingMethod) method).setRequestEntity(
-                        new StringRequestEntity(requestInfo.getContent(), requestInfo.getContentType(), "UTF-8"));
-            }
+            setEntityContent(requestInfo, method);
             break;
         case DELETE:
             method = new DeleteMethod(requestInfo.getUrl());
@@ -69,6 +64,17 @@ public class HTTPUtils {
             return null;
         }
         return execute(method, requestInfo);
+    }
+
+    private static void setEntityContent(final RequestInfo requestInfo, HttpMethodBase method)
+            throws UnsupportedEncodingException {
+        if (requestInfo.getContent() instanceof byte[]) {
+            ((EntityEnclosingMethod) method).setRequestEntity(
+                    new ByteArrayRequestEntity((byte[]) requestInfo.getContent(), requestInfo.getContentType()));
+        } else if (requestInfo.getContent() instanceof String) {
+            ((EntityEnclosingMethod) method).setRequestEntity(
+                    new StringRequestEntity((String) requestInfo.getContent(), requestInfo.getContentType(), "UTF-8"));
+        }
     }
 
     private ResponseInfo execute(final HttpMethodBase method, final RequestInfo requestInfo) throws IOException {
@@ -86,10 +92,10 @@ public class HTTPUtils {
                 }
             }
             final int sc = httpClient.executeMethod(method);
-            String contents = new String(FileUtils.read(method.getResponseBodyAsStream()));
+            byte[] data = FileUtils.read(method.getResponseBodyAsStream());
             String type = method.getResponseHeader(CONTENT_TYPE).getValue();
 
-            return new ResponseInfo(sc, type, toResponseHeaders(method), contents);
+            return new ResponseInfo(sc, type, toResponseHeaders(method), data, requestInfo.getConfig());
         } finally {
             try {
                 method.releaseConnection();

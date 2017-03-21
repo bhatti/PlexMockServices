@@ -15,7 +15,9 @@ public class Configuration {
     private final String urlPrefix;
     private final File dataDir;
     private final boolean randomResponseOrder;
-    private final boolean saveRequestResponses;
+    private final boolean saveRawRequestResponses;
+    private final boolean unserializeJsonContentBeforeSave;
+    private final boolean saveJsonResponsesOnly;
     private final int injectFailuresAndWaitTimesPerc;
     private final int minWaitTimeMillis;
     private final int maxWaitTimeMillis;
@@ -32,7 +34,10 @@ public class Configuration {
         maxWaitTimeMillis = getInteger(servletConfig, "maxWaitTimeMillis");
         recordMode = "true".equals(getString(servletConfig, "recordMode", "true"));
         randomResponseOrder = "true".equals(getString(servletConfig, "randomResponseOrder", "false"));
-        saveRequestResponses = "true".equals(getString(servletConfig, "saveRequestResponses", "false"));
+        saveRawRequestResponses = "true".equals(getString(servletConfig, "saveRawRequestResponses", "false"));
+        saveJsonResponsesOnly = "true".equals(getString(servletConfig, "saveJsonResponsesOnly", "false"));
+        unserializeJsonContentBeforeSave = "true"
+                .equals(getString(servletConfig, "unserializeJsonContentBeforeSave", "false"));
         dataDir = new File(getString(servletConfig, "dataDir", "data"));
         defaultExportFormat = ExportFormat
                 .valueOf(getString(servletConfig, "defaultExportFormat", "YAML").toUpperCase());
@@ -128,8 +133,8 @@ public class Configuration {
         return defaultExportFormat;
     }
 
-    public boolean isSaveRequestResponses() {
-        return saveRequestResponses;
+    public boolean isSaveRawRequestResponses() {
+        return saveRawRequestResponses;
     }
 
     @Override
@@ -206,5 +211,13 @@ public class Configuration {
             return getFileIfExists(name, counter);
         }
         return null;
+    }
+
+    public boolean isUnserializeJsonContentBeforeSave() {
+        return unserializeJsonContentBeforeSave;
+    }
+
+    public boolean isSaveJsonResponsesOnly() {
+        return saveJsonResponsesOnly;
     }
 }

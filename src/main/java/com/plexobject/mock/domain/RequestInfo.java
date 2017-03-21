@@ -32,12 +32,14 @@ public class RequestInfo {
     private final String contentType;
     private final Map<java.lang.String, java.lang.String> headers;
     private final Map<java.lang.String, java.lang.String[]> params;
-    private final String content;
+    private final Object content;
     private final int mockWaitTimeMillis;
     private final int mockResponseCode;
     private final boolean recordMode;
+    private final Configuration config;
 
     public RequestInfo(final HttpServletRequest req, Configuration config) throws IOException {
+        this.config = config;
         String path = getPath(req);
         url = config.getUrlPrefix() + path;
         contentType = req.getContentType();
@@ -45,16 +47,21 @@ public class RequestInfo {
         params = req.getParameterMap();
         useHash = "true".equals(params.get(MOCK_USE_HASH));
         byte[] data = FileUtils.read(req.getInputStream());
-        content = data.length > 0 ? new String(data) : null;
+        content = data.length > 0 && isJson() ? new String(data) : data;
         requestId = getRequestId(req, path, req.getParameterMap(), null);
         mockWaitTimeMillis = getInteger(req, MOCK_WAIT_TIME_MILLIS, XMOCK_WAIT_TIME_MILLIS);
         mockResponseCode = getInteger(req, MOCK_RESPONSE_CODE, XMOCK_RESPONSE_CODE);
         recordMode = isRecordMode(req, config);
     }
 
-    private static int getInteger(HttpServletRequest req, String paramKey, String headerKey) {
-        String value = getValue(req, paramKey, headerKey, "0");
-        return Integer.parseInt(value);
+    @JsonIgnore
+    public boolean isJson() {
+        return contentType != null && contentType.startsWith("application/json");
+    }
+
+    @JsonIgnore
+    public Configuration getConfig() {
+        return config;
     }
 
     @JsonIgnore
@@ -94,7 +101,7 @@ public class RequestInfo {
         return params;
     }
 
-    public String getContent() {
+    public Object getContent() {
         return content;
     }
 
@@ -106,7 +113,13 @@ public class RequestInfo {
             sb.append("\tParams: " + params + "\n");
         }
         if (content != null) {
-            sb.append("\tContent: " + content.length() + ">" + content + "\n");
+            int len = 0;
+            if (content instanceof byte[]) {
+                len = ((byte[]) content).length;
+            } else if (content instanceof CharSequence) {
+                len = ((CharSequence) content).length();
+            }
+            sb.append("\tContent: " + len + ">" + content + "\n");
         }
         return sb.toString();
     }
@@ -174,4 +187,10 @@ public class RequestInfo {
         }
         return FileUtils.hash(sb.toString());
     }
+
+    private static int getInteger(HttpServletRequest req, String paramKey, String headerKey) {
+        String value = getValue(req, paramKey, headerKey, "0");
+        return Integer.parseInt(value);
+    }
+
 }

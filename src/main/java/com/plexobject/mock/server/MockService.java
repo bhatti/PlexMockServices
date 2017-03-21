@@ -133,9 +133,12 @@ public class MockService extends HttpServlet {
     }
 
     private void save(MethodType methodType, RequestInfo requestInfo, ResponseInfo responseInfo) throws IOException {
+        if (config.isSaveJsonResponsesOnly() && !requestInfo.isJson()) {
+            return;
+        }
         File path = config.toFile(requestInfo.getRequestId(), methodType, false);
         config.getDefaultExportFormat().write(path, responseInfo);
-        if (config.isSaveRequestResponses()) {
+        if (config.isSaveRawRequestResponses()) {
             ExportFormat.JSON.write(config.getNextIOCounterFile(requestInfo.getRequestId(), methodType),
                     new RequestResponse(requestInfo, responseInfo));
         }
