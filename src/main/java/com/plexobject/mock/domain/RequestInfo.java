@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.plexobject.mock.util.FileUtils;
 
 public class RequestInfo {
@@ -53,22 +54,27 @@ public class RequestInfo {
         return Integer.parseInt(value);
     }
 
+    @JsonIgnore
     public String getRequestId() {
         return requestId;
     }
 
+    @JsonIgnore
     public int getMockWaitTimeMillis() {
         return mockWaitTimeMillis;
     }
 
+    @JsonIgnore
     public int getMockResponseCode() {
         return mockResponseCode;
     }
 
+    @JsonIgnore
     public boolean isRecordMode() {
         return recordMode;
     }
 
+    @JsonIgnore
     public String getUrl() {
         return url;
     }
@@ -90,6 +96,7 @@ public class RequestInfo {
     }
 
     @Override
+    @JsonIgnore
     public String toString() {
         StringBuilder sb = new StringBuilder(url + ", ID=" + requestId + "\n");
         if (params != null) {

@@ -7,17 +7,17 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.plexobject.mock.util.JSONUtils;
 
-public class RecordedResponse implements SerializationLifecycle {
+public class ResponseInfo implements SerializationLifecycle {
     private transient int responseCode;
     private Map<String, String> headers;
     private String contentType;
     private String contentClass;
     private Object contents;
 
-    public RecordedResponse() {
+    public ResponseInfo() {
     }
 
-    public RecordedResponse(int responseCode, String contentType, Map<String, String> headers, Object contents) {
+    public ResponseInfo(int responseCode, String contentType, Map<String, String> headers, Object contents) {
         this.responseCode = responseCode;
         this.contentType = contentType;
         this.headers = headers;

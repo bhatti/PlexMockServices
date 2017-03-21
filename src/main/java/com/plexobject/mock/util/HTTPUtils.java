@@ -22,7 +22,7 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 
 import com.plexobject.mock.domain.Configuration;
 import com.plexobject.mock.domain.MethodType;
-import com.plexobject.mock.domain.RecordedResponse;
+import com.plexobject.mock.domain.ResponseInfo;
 import com.plexobject.mock.domain.RequestInfo;
 
 public class HTTPUtils {
@@ -38,7 +38,7 @@ public class HTTPUtils {
         httpClient.getParams().setParameter("http.connection.timeout", config.getConnectionTimeoutMillis());
     }
 
-    public RecordedResponse invokeRemoteAPI(final MethodType methodType, final RequestInfo requestInfo)
+    public ResponseInfo invokeRemoteAPI(final MethodType methodType, final RequestInfo requestInfo)
             throws IOException, UnsupportedEncodingException {
         HttpMethodBase method = null;
         switch (methodType) {
@@ -71,7 +71,7 @@ public class HTTPUtils {
         return execute(method, requestInfo);
     }
 
-    private RecordedResponse execute(final HttpMethodBase method, final RequestInfo requestInfo) throws IOException {
+    private ResponseInfo execute(final HttpMethodBase method, final RequestInfo requestInfo) throws IOException {
         try {
             for (Map.Entry<String, String> h : requestInfo.getHeaders().entrySet()) {
                 method.setRequestHeader(h.getKey(), h.getValue());
@@ -89,7 +89,7 @@ public class HTTPUtils {
             String contents = new String(FileUtils.read(method.getResponseBodyAsStream()));
             String type = method.getResponseHeader(CONTENT_TYPE).getValue();
 
-            return new RecordedResponse(sc, type, toResponseHeaders(method), contents);
+            return new ResponseInfo(sc, type, toResponseHeaders(method), contents);
         } finally {
             try {
                 method.releaseConnection();

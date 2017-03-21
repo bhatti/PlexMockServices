@@ -13,9 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 
 import com.plexobject.mock.domain.Configuration;
+import com.plexobject.mock.domain.ExportFormat;
 import com.plexobject.mock.domain.MethodType;
-import com.plexobject.mock.domain.RecordedResponse;
 import com.plexobject.mock.domain.RequestInfo;
+import com.plexobject.mock.domain.RequestResponse;
+import com.plexobject.mock.domain.ResponseInfo;
 import com.plexobject.mock.util.HTTPUtils;
 
 public class MockService extends HttpServlet {
@@ -62,7 +64,7 @@ public class MockService extends HttpServlet {
     private void doService(HttpServletRequest req, HttpServletResponse res, MethodType methodType)
             throws ServletException, IOException {
         RequestInfo requestInfo = new RequestInfo(req, config);
-        RecordedResponse response = null;
+        ResponseInfo response = null;
 
         StringBuilder debugInfo = new StringBuilder();
 
@@ -70,7 +72,7 @@ public class MockService extends HttpServlet {
             debugInfo.append(methodType + " RECORDING " + requestInfo);
 
             response = httpUtils.invokeRemoteAPI(methodType, requestInfo);
-            save(response, methodType, requestInfo);
+            save(methodType, requestInfo, response);
         } else {
             response = read(methodType, requestInfo);
             debugInfo.append(methodType + " PLAYING " + requestInfo);
@@ -130,17 +132,21 @@ public class MockService extends HttpServlet {
         }
     }
 
-    private void save(RecordedResponse response, MethodType methodType, RequestInfo requestInfo) throws IOException {
+    private void save(MethodType methodType, RequestInfo requestInfo, ResponseInfo responseInfo) throws IOException {
         File path = config.toFile(requestInfo.getRequestId(), methodType, false);
-        config.getDefaultExportFormat().write(path, response);
+        config.getDefaultExportFormat().write(path, responseInfo);
+        if (config.isSaveRequestResponses()) {
+            ExportFormat.JSON.write(config.getNextIOCounterFile(requestInfo.getRequestId(), methodType),
+                    new RequestResponse(requestInfo, responseInfo));
+        }
     }
 
-    private RecordedResponse read(MethodType methodType, RequestInfo requestInfo) throws IOException {
+    private ResponseInfo read(MethodType methodType, RequestInfo requestInfo) throws IOException {
         File path = config.toFile(requestInfo.getRequestId(), methodType, true);
         if (path == null) {
             return null;
         }
-        RecordedResponse resp = config.getDefaultExportFormat().read(path, RecordedResponse.class, requestInfo, config);
+        ResponseInfo resp = config.getDefaultExportFormat().read(path, ResponseInfo.class, requestInfo, config);
         return resp;
     }
 }

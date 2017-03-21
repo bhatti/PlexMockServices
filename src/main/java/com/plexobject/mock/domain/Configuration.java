@@ -15,12 +15,14 @@ public class Configuration {
     private final String urlPrefix;
     private final File dataDir;
     private final boolean randomResponseOrder;
+    private final boolean saveRequestResponses;
     private final int injectFailuresAndWaitTimesPerc;
     private final int minWaitTimeMillis;
     private final int maxWaitTimeMillis;
     private final ExportFormat defaultExportFormat;
     private Map<String, Integer> readCounters = new HashMap<>();
     private Map<String, Integer> writeCounters = new HashMap<>();
+    private Map<String, Integer> ioCounters = new HashMap<>();
 
     public Configuration(ServletConfig servletConfig) {
         connectionTimeoutMillis = getInteger(servletConfig, "connectionTimeoutMillis");
@@ -30,6 +32,7 @@ public class Configuration {
         maxWaitTimeMillis = getInteger(servletConfig, "maxWaitTimeMillis");
         recordMode = "true".equals(getString(servletConfig, "recordMode", "true"));
         randomResponseOrder = "true".equals(getString(servletConfig, "randomResponseOrder", "false"));
+        saveRequestResponses = "true".equals(getString(servletConfig, "saveRequestResponses", "false"));
         dataDir = new File(getString(servletConfig, "dataDir", "data"));
         defaultExportFormat = ExportFormat
                 .valueOf(getString(servletConfig, "defaultExportFormat", "YAML").toUpperCase());
@@ -64,19 +67,10 @@ public class Configuration {
         }
     }
 
-    private File getFileIfExists(String name, int counter) {
-        for (String ext : ExportFormat.EXTS) {
-            File file = new File(getDataDir(), name + "_" + counter + ext);
-            if (file.exists()) {
-                return file;
-            }
-        }
-        if (counter > 1) {
-            counter = 1;
-            readCounters.remove(name);
-            return getFileIfExists(name, counter);
-        }
-        return null;
+    public File getNextIOCounterFile(String url, MethodType methodType) {
+        final String name = normalizeName(url, methodType.name());
+        int counter = getNextCounter(ioCounters, name);
+        return new File(getDataDir(), name + "_" + counter + ".io");
     }
 
     public int getMaxSamples() {
@@ -132,6 +126,10 @@ public class Configuration {
 
     public ExportFormat getDefaultExportFormat() {
         return defaultExportFormat;
+    }
+
+    public boolean isSaveRequestResponses() {
+        return saveRequestResponses;
     }
 
     @Override
@@ -193,5 +191,20 @@ public class Configuration {
             return Integer.parseInt(value.trim());
         }
         return 0;
+    }
+
+    private File getFileIfExists(String name, int counter) {
+        for (String ext : ExportFormat.EXTS) {
+            File file = new File(getDataDir(), name + "_" + counter + ext);
+            if (file.exists()) {
+                return file;
+            }
+        }
+        if (counter > 1) {
+            counter = 1;
+            readCounters.remove(name);
+            return getFileIfExists(name, counter);
+        }
+        return null;
     }
 }
