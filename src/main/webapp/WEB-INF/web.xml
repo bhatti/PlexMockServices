@@ -44,6 +44,7 @@
             <param-name>randomResponseOrder</param-name> 
             <param-value>false</param-value> 
         </init-param>
+        <!-- defaultExportFormat can be YAML, JSON, Velocity or Thymeleaf -->
         <init-param>
             <param-name>defaultExportFormat</param-name> 
             <param-value>YAML</param-value> 
