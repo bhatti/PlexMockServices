@@ -43,9 +43,9 @@ public class VelocityUtils {
                 vc.put(e.getKey(), e.getValue());
             }
         }
-        for (Map.Entry<java.lang.String, java.lang.String[]> e : requestInfo.getParams().entrySet()) {
-            if (e.getValue().length > 0) {
-                vc.put(e.getKey(), e.getValue()[0]);
+        for (Map.Entry<java.lang.String, java.lang.String> e : requestInfo.getParams().entrySet()) {
+            if (e.getValue() != null) {
+                vc.put(e.getKey(), e.getValue());
             }
         }
         StringWriter sw = new StringWriter();

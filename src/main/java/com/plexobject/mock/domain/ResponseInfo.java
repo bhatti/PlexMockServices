@@ -29,9 +29,7 @@ public class ResponseInfo implements SerializationLifecycle {
 
     @JsonIgnore
     public boolean isAPIContentType() {
-        return contentType != null && (contentType.startsWith("application/json")
-                || contentType.startsWith("application/x-www-form-urlencoded")
-                || contentType.startsWith("multipart/form-data"));
+        return contentType != null && contentType.startsWith("application/json");
     }
 
     @JsonIgnore

@@ -21,6 +21,7 @@ import com.plexobject.mock.domain.RequestResponse;
 import com.plexobject.mock.domain.ResponseInfo;
 import com.plexobject.mock.util.HTTPUtils;
 
+// socat -v tcp-listen:8080,reuseaddr,fork tcp:192.168.180.40:80
 public class MockService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger logger = Logger.getLogger(MockService.class);
@@ -70,11 +71,16 @@ public class MockService extends HttpServlet {
         StringBuilder debugInfo = new StringBuilder();
 
         if (requestInfo.isRecordMode()) {
-            response = httpUtils.invokeRemoteAPI(methodType, requestInfo);
-            if (save(methodType, requestInfo, response)) {
-                debugInfo.append(methodType + " RECORDING " + requestInfo);
-            } else {
-                debugInfo.append(methodType + " REDIRECTING " + requestInfo);
+            try {
+                response = httpUtils.invokeRemoteAPI(methodType, requestInfo);
+                if (save(methodType, requestInfo, response)) {
+                    debugInfo.append(methodType + " RECORDING " + requestInfo);
+                } else {
+                    debugInfo.append(methodType + " REDIRECTING " + requestInfo);
+                }
+            } catch (IOException e) {
+                res.sendError(500, "IO Error, while invoking " + requestInfo);
+                return;
             }
         } else {
             response = read(methodType, requestInfo);
@@ -125,7 +131,8 @@ public class MockService extends HttpServlet {
         } else {
             out.write("API failed".getBytes());
         }
-        debugInfo.append("\tStatus " + response.getResponseCode());
+        debugInfo.append(
+                "\tStatus: " + response.getResponseCode() + ", Response Content-Type: " + response.getContentType());
         logger.info(debugInfo);
         out.flush();
     }
@@ -139,7 +146,7 @@ public class MockService extends HttpServlet {
     }
 
     private boolean save(MethodType methodType, RequestInfo requestInfo, ResponseInfo responseInfo) throws IOException {
-        if (config.isSaveAPIResponsesOnly() && !requestInfo.isAPIContentType()) {
+        if (config.isSaveAPIResponsesOnly() && !responseInfo.isAPIContentType()) {
             return false;
         }
         File path = config.toFile(requestInfo.getRequestId(), methodType, false);

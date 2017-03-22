@@ -38,9 +38,9 @@ public class ThymeleafUtils {
             }
         }
 
-        for (Map.Entry<java.lang.String, java.lang.String[]> e : requestInfo.getParams().entrySet()) {
-            if (e.getValue().length > 0) {
-                ctx.setVariable(e.getKey(), e.getValue()[0]);
+        for (Map.Entry<java.lang.String, java.lang.String> e : requestInfo.getParams().entrySet()) {
+            if (e.getValue() != null) {
+                ctx.setVariable(e.getKey(), e.getValue());
             }
         }
 

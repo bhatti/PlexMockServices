@@ -25,13 +25,15 @@ public class RequestInfo {
     private static final String XREQUEST_ID = "XRequestId";
     private static final String XMOCK_WAIT_TIME_MILLIS = "XMockWaitTimeMillis";
     private static final String XMOCK_RESPONSE_CODE = "XMockResponseCode";
-    private static final Set<String> SKIP_HEADERS = new HashSet<>(Arrays.asList("Accept-Encoding"));
+    private static final Set<String> SKIP_HEADERS = new HashSet<>(
+            Arrays.asList("Accept-Encoding", "Upgrade-Insecure-Requests", "Upgrade: websocket", "Sec-WebSocket-Version",
+                    "Sec-WebSocket-Key", "Sec-WebSocket-Extensions"));
     private final boolean useHash;
     private final String requestId;
     private final String url;
     private final String contentType;
-    private final Map<java.lang.String, java.lang.String> headers;
-    private final Map<java.lang.String, java.lang.String[]> params;
+    private final Map<String, String> headers;
+    private final Map<String, String> params;
     private final Object content;
     private final int mockWaitTimeMillis;
     private final int mockResponseCode;
@@ -44,7 +46,7 @@ public class RequestInfo {
         url = config.getUrlPrefix() + path;
         contentType = req.getContentType();
         headers = toHeaders(req);
-        params = req.getParameterMap();
+        params = toParams(req);
         useHash = "true".equals(params.get(MOCK_USE_HASH));
         byte[] data = FileUtils.read(req.getInputStream());
         content = data.length > 0 && isAPIContentType() ? new String(data) : data;
@@ -54,9 +56,20 @@ public class RequestInfo {
         recordMode = isRecordMode(req, config);
     }
 
+    private static Map<String, String> toParams(final HttpServletRequest req) {
+        Map<String, String> params = new HashMap<>();
+        Set<Map.Entry<String, String[]>> entries = (Set<Map.Entry<String, String[]>>) req.getParameterMap().entrySet();
+        for (Map.Entry<String, String[]> e : entries) {
+            if (e.getValue().length > 0) {
+                params.put(e.getKey(), e.getValue()[0]);
+            }
+        }
+        return params;
+    }
+
     @JsonIgnore
     public boolean isAPIContentType() {
-        return contentType != null && (contentType.startsWith("application/json")
+        return contentType == null || (contentType.startsWith("application/json")
                 || contentType.startsWith("application/x-www-form-urlencoded")
                 || contentType.startsWith("multipart/form-data"));
     }
@@ -99,7 +112,7 @@ public class RequestInfo {
         return headers;
     }
 
-    public Map<java.lang.String, java.lang.String[]> getParams() {
+    public Map<java.lang.String, java.lang.String> getParams() {
         return params;
     }
 
@@ -118,10 +131,11 @@ public class RequestInfo {
             int len = 0;
             if (content instanceof byte[]) {
                 len = ((byte[]) content).length;
+                sb.append("\tBinary Content Len: " + len + "\n");
             } else if (content instanceof CharSequence) {
                 len = ((CharSequence) content).length();
+                sb.append("\tContent: " + len + ">" + content + "\n");
             }
-            sb.append("\tContent: " + len + ">" + content + "\n");
         }
         return sb.toString();
     }
@@ -165,15 +179,16 @@ public class RequestInfo {
         return id;
     }
 
-    private static Map<String, String> toHeaders(final HttpServletRequest req) {
+    private Map<String, String> toHeaders(final HttpServletRequest req) {
         Map<String, String> headers = new HashMap<String, String>();
         Enumeration<String> names = req.getHeaderNames();
         while (names.hasMoreElements()) {
             String name = names.nextElement();
-            if (!SKIP_HEADERS.contains(name)) {
-                String value = req.getHeader(name);
-                headers.put(name, value);
+            if (SKIP_HEADERS.contains(name)) {
+                continue;
             }
+            String value = req.getHeader(name);
+            headers.put(name, value);
         }
         return headers;
     }

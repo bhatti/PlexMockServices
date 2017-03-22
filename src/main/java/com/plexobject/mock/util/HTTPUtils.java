@@ -33,7 +33,7 @@ public class HTTPUtils {
     public HTTPUtils(Configuration config) {
         MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
         httpClient = new HttpClient(connectionManager);
-        httpClient.getParams().setCookiePolicy(CookiePolicy.IGNORE_COOKIES);
+        httpClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
         httpClient.getParams().setSoTimeout(config.getConnectionTimeoutMillis());
         httpClient.getParams().setParameter("http.socket.timeout", config.getConnectionTimeoutMillis());
         httpClient.getParams().setParameter("http.connection.timeout", config.getConnectionTimeoutMillis());
@@ -83,11 +83,9 @@ public class HTTPUtils {
                 method.setRequestHeader(h.getKey(), h.getValue());
             }
             if (requestInfo.getParams() != null && method instanceof PostMethod) {
-                for (Map.Entry<String, String[]> e : requestInfo.getParams().entrySet()) {
-                    for (String v : e.getValue()) {
-                        if (e.getKey() != null && v != null) {
-                            ((PostMethod) method).addParameter(e.getKey().trim(), v.trim());
-                        }
+                for (Map.Entry<String, String> e : requestInfo.getParams().entrySet()) {
+                    if (e.getValue() != null) {
+                        ((PostMethod) method).addParameter(e.getKey().trim(), e.getValue().trim());
                     }
                 }
             }
@@ -99,9 +97,10 @@ public class HTTPUtils {
             } else {
                 data = new byte[0];
             }
-            String type = method.getResponseHeader(CONTENT_TYPE).getValue();
+            Header typeHeader = method.getResponseHeader(CONTENT_TYPE);
+            String contentType = typeHeader != null ? typeHeader.getValue() : null;
 
-            return new ResponseInfo(sc, type, toResponseHeaders(method), data, requestInfo.getConfig());
+            return new ResponseInfo(sc, contentType, toResponseHeaders(method), data, requestInfo.getConfig());
         } finally {
             try {
                 method.releaseConnection();
