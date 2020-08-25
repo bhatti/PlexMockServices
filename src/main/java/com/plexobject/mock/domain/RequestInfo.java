@@ -26,7 +26,8 @@ public class RequestInfo {
     private static final String XMOCK_WAIT_TIME_MILLIS = "XMockWaitTimeMillis";
     private static final String XMOCK_RESPONSE_CODE = "XMockResponseCode";
     private static final Set<String> SKIP_HEADERS = new HashSet<>(
-            Arrays.asList("Accept-Encoding", "Upgrade-Insecure-Requests", "Upgrade: websocket", "Sec-WebSocket-Version",
+            Arrays.asList("Accept-Encoding", "Upgrade-Insecure-Requests",
+                    "Upgrade: websocket", "Sec-WebSocket-Version",
                     "Sec-WebSocket-Key", "Sec-WebSocket-Extensions"));
     private final boolean useHash;
     private final String requestId;
@@ -40,7 +41,8 @@ public class RequestInfo {
     private final boolean recordMode;
     private final Configuration config;
 
-    public RequestInfo(final HttpServletRequest req, Configuration config) throws IOException {
+    public RequestInfo(final HttpServletRequest req, Configuration config)
+            throws IOException {
         this.config = config;
         String path = getPath(req);
         url = config.getUrlPrefix() + path;
@@ -49,16 +51,20 @@ public class RequestInfo {
         params = toParams(req);
         useHash = "true".equals(params.get(MOCK_USE_HASH));
         byte[] data = FileUtils.read(req.getInputStream());
-        content = data.length > 0 && isAPIContentType() ? new String(data) : data;
+        content = data.length > 0 && isAPIContentType() ? new String(data)
+                : data;
         requestId = getRequestId(req, path, req.getParameterMap(), null);
-        mockWaitTimeMillis = getInteger(req, MOCK_WAIT_TIME_MILLIS, XMOCK_WAIT_TIME_MILLIS);
-        mockResponseCode = getInteger(req, MOCK_RESPONSE_CODE, XMOCK_RESPONSE_CODE);
+        mockWaitTimeMillis = getInteger(req, MOCK_WAIT_TIME_MILLIS,
+                XMOCK_WAIT_TIME_MILLIS);
+        mockResponseCode = getInteger(req, MOCK_RESPONSE_CODE,
+                XMOCK_RESPONSE_CODE);
         recordMode = isRecordMode(req, config);
     }
 
     private static Map<String, String> toParams(final HttpServletRequest req) {
         Map<String, String> params = new HashMap<>();
-        Set<Map.Entry<String, String[]>> entries = (Set<Map.Entry<String, String[]>>) req.getParameterMap().entrySet();
+        Set<Map.Entry<String, String[]>> entries = (Set<Map.Entry<String, String[]>>) req
+                .getParameterMap().entrySet();
         for (Map.Entry<String, String[]> e : entries) {
             if (e.getValue().length > 0) {
                 params.put(e.getKey(), e.getValue()[0]);
@@ -69,9 +75,11 @@ public class RequestInfo {
 
     @JsonIgnore
     public boolean isAPIContentType() {
-        return contentType == null || (contentType.startsWith("application/json")
-                || contentType.startsWith("application/x-www-form-urlencoded")
-                || contentType.startsWith("multipart/form-data"));
+        return contentType == null
+                || (contentType.startsWith("application/json")
+                        || contentType
+                                .startsWith("application/x-www-form-urlencoded")
+                        || contentType.startsWith("multipart/form-data"));
     }
 
     @JsonIgnore
@@ -123,7 +131,8 @@ public class RequestInfo {
     @Override
     @JsonIgnore
     public String toString() {
-        StringBuilder sb = new StringBuilder(url + ", Content-Type=" + contentType + ", ID=" + requestId + "\n");
+        StringBuilder sb = new StringBuilder(url + ", Content-Type="
+                + contentType + ", ID=" + requestId + "\n");
         if (params != null) {
             sb.append("\tParams: " + params + "\n");
         }
@@ -141,10 +150,12 @@ public class RequestInfo {
     }
 
     private static String getPath(HttpServletRequest req) {
-        return req.getQueryString() == null ? req.getRequestURI() : req.getRequestURI() + "?" + req.getQueryString();
+        return req.getQueryString() == null ? req.getRequestURI()
+                : req.getRequestURI() + "?" + req.getQueryString();
     }
 
-    private static String getValue(HttpServletRequest req, String paramKey, String headerKey, String defValue) {
+    private static String getValue(HttpServletRequest req, String paramKey,
+            String headerKey, String defValue) {
         String value = req.getParameter(paramKey);
         if (value == null) {
             value = req.getHeader(headerKey);
@@ -155,9 +166,11 @@ public class RequestInfo {
         return value;
     }
 
-    private static boolean isRecordMode(HttpServletRequest req, Configuration config) {
+    private static boolean isRecordMode(HttpServletRequest req,
+            Configuration config) {
         String reqMode = getValue(req, MOCK_MODE, XMOCK_MODE, null);
-        return reqMode != null ? RECORD.equalsIgnoreCase(reqMode) : config.isRecordMode();
+        return reqMode != null ? RECORD.equalsIgnoreCase(reqMode)
+                : config.isRecordMode();
     }
 
     private String getRequestId(HttpServletRequest req, final String path,
@@ -169,7 +182,8 @@ public class RequestInfo {
         return path + id;
     }
 
-    private static String getIdByHash(Map<java.lang.String, java.lang.String[]> params, String body) {
+    private static String getIdByHash(
+            Map<java.lang.String, java.lang.String[]> params, String body) {
         String id;
         if (body != null) {
             id = FileUtils.hash(body);
@@ -193,7 +207,8 @@ public class RequestInfo {
         return headers;
     }
 
-    private static final String toKey(final Map<java.lang.String, java.lang.String[]> params) {
+    private static final String toKey(
+            final Map<java.lang.String, java.lang.String[]> params) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String[]> e : params.entrySet()) {
             for (String v : e.getValue()) {
@@ -205,7 +220,8 @@ public class RequestInfo {
         return FileUtils.hash(sb.toString());
     }
 
-    private static int getInteger(HttpServletRequest req, String paramKey, String headerKey) {
+    private static int getInteger(HttpServletRequest req, String paramKey,
+            String headerKey) {
         String value = getValue(req, paramKey, headerKey, "0");
         return Integer.parseInt(value);
     }

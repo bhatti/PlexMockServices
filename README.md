@@ -32,80 +32,59 @@ git clone git@github.com:bhatti/PlexMockServices.git
 ./gradlew compile
 ```
 ## Configuring:
-- Edit src/main/webapp/WEB-INF/web.xml 
+- Edit src/main/resources/application.properties
 * Specify default recordMode
 ```xml
-        <init-param>
-            <param-name>recordMode</param-name> 
-            <param-value>true</param-value> 
-        </init-param>
+            recordMode=true
 ```
 
 - Specify format of export files:
 ```xml
-        <init-param>
-            <param-name>defaultExportFormat</param-name> 
-            <param-value>YAML</param-value> 
-        </init-param>
+            defaultExportFormat=YAML
 ```
 Note: You can specify YAML, JSON, Velocity or Thymeleaf format.
 
 - Specify order of response
 ```xml
-        <init-param>
-            <param-name>randomResponseOrder</param-name> 
-            <param-value>true</param-value> 
-        </init-param>
+            randomResponseOrder=true
 ```
 If randomResponseOrder is true then mock server will send random response, otherwise it will send in the order they were recorded. 
 Note: The order is not preserved between restarts of the server.
 
 - Add random failures/wait times
 ```xml
-        <init-param>
-            <param-name>injectFailuresAndWaitTimesPerc</param-name> 
-            <param-value>10</param-value> 
-        </init-param>
+            injectFailuresAndWaitTimesPerc=10
 ```
 This means that 10% of responses will either fail or will have high wait times.
 You can configure minWaitTimeMillis and maxWaitTimeMillis for minimum/maximum wait that request will take.
 - Add random failures/wait times
 ```xml
-        <init-param>
-            <param-name>minWaitTimeMillis</param-name> 
-            <param-value>10</param-value> 
-        </init-param>
-        <init-param>
-            <param-name>maxWaitTimeMillis</param-name> 
-            <param-value>1000</param-value> 
-        </init-param>
+            minWaitTimeMillis=10
+            maxWaitTimeMillis=1000
 ```
 
 - Specify target service base URL
 ```xml
-        <init-param>
-            <param-name>urlPrefix</param-name> 
-            <param-value>http://localhost:8181</param-value> 
-        </init-param>
+            urlPrefix=http://localhost:9000
 ```
 Note: It's recommended that you use deploy mock service as root context so mapping of service paths is simple.
 
 ## Testing
 ### Start server
 ```bash
-./gradlew war appRun
+./gradlew war run
 ```
 ### Record Mode
 ```bash
-  curl -X POST http://localhost:8181/myservice?mockMode=record -H 'Content-Type: application/json' -d {'json':true}
-  curl -H 'Content-Type: application/json' -H "XMockMode: record" http://localhost:8181/myservice
+  curl -X POST http://localhost:8000/myservice?mockMode=record -H 'Content-Type: application/json' -d {'json':true}
+  curl -H 'Content-Type: application/json' -H "XMockMode: record" http://localhost:8000/myservice
 ```
 Note: You can specify mockMode as a request parameter or a header parameter.
 
 ### Play Mode
 ```bash
-  curl -X POST http://localhost:8181/myservice?mockMode=play -H 'Content-Type: application/json' -d {'json':true}
-  curl -H 'Content-Type: application/json' -H "XMockMode: play" http://localhost:8181/myservice
+  curl -X POST http://localhost:8000/myservice?mockMode=play -H 'Content-Type: application/json' -d {'json':true}
+  curl -H 'Content-Type: application/json' -H "XMockMode: play" http://localhost:8000/myservice
 ```
 
 ### Specifying the id for request

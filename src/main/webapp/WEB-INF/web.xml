@@ -8,71 +8,7 @@
     <servlet>
         <servlet-name>mock_server</servlet-name>
         <servlet-class>com.plexobject.mock.server.MockService</servlet-class>
-        <init-param>
-            <param-name>connectionTimeoutMillis</param-name> 
-            <param-value>10000</param-value> 
-        </init-param>
-        <!-- This will enable random failures and timeouts -->
-        <init-param>
-            <param-name>injectFailuresAndWaitTimesPerc</param-name> 
-            <param-value>0</param-value> 
-        </init-param>
-        <init-param>
-            <param-name>minWaitTimeMillis</param-name> 
-            <param-value>10</param-value> 
-        </init-param>
-        <init-param>
-            <param-name>maxWaitTimeMillis</param-name> 
-            <param-value>1000</param-value> 
-        </init-param>
-        <!-- default recording mode -->
-        <init-param>
-            <param-name>recordMode</param-name> 
-            <param-value>true</param-value> 
-        </init-param>
-        <!-- This is target URL -->
-        <init-param>
-            <param-name>urlPrefix</param-name> 
-            <param-value>http://localhost:9395</param-value> 
-        </init-param>
-        <init-param>
-            <param-name>dataDir</param-name> 
-            <param-value>data</param-value> 
-        </init-param> 
-        <!-- max number of samples to store -->
-        <init-param>
-            <param-name>maxSamples</param-name> 
-            <param-value>10</param-value> 
-        </init-param>
-        <!-- if randomResponseOrder is true, then random response will be
-             returned when there are multiple response files matching request -->
-        <init-param>
-            <param-name>randomResponseOrder</param-name> 
-            <param-value>false</param-value> 
-        </init-param>
-        <!-- save all raw request/responses -->
-        <init-param>
-            <param-name>saveRawRequestResponses</param-name> 
-            <param-value>true</param-value> 
-        </init-param>
-        <!-- save API responses only -->
-        <init-param>
-            <param-name>saveAPIResponsesOnly</param-name> 
-            <param-value>true</param-value> 
-        </init-param>
-        <!-- defaultExportFormat can be YAML, JSON, Velocity or Thymeleaf -->
-        <init-param>
-            <param-name>defaultExportFormat</param-name> 
-            <param-value>YAML</param-value> 
-        </init-param>
-        <!-- Following flag will derialize json content so that if you are
-             using YAML format then all JSON will appear as JSON -->
-        <init-param>
-            <param-name>unserializeJsonContentBeforeSave</param-name> 
-            <param-value>false</param-value> 
-        </init-param>
         <load-on-startup>1</load-on-startup>
-
     </servlet>
 
     <servlet-mapping>

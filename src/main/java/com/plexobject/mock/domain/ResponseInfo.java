@@ -18,7 +18,8 @@ public class ResponseInfo implements SerializationLifecycle {
     public ResponseInfo() {
     }
 
-    public ResponseInfo(int responseCode, String contentType, Map<String, String> headers, Object contents,
+    public ResponseInfo(int responseCode, String contentType,
+            Map<String, String> headers, Object contents,
             Configuration config) {
         this.responseCode = responseCode;
         this.contentType = contentType;
@@ -29,7 +30,8 @@ public class ResponseInfo implements SerializationLifecycle {
 
     @JsonIgnore
     public boolean isAPIContentType() {
-        return contentType != null && contentType.startsWith("application/json");
+        return contentType != null
+                && contentType.startsWith("application/json");
     }
 
     @JsonIgnore
@@ -79,7 +81,8 @@ public class ResponseInfo implements SerializationLifecycle {
 
     @Override
     public void beforeSerialize() throws IOException {
-        if (isAPIContentType() && getContents() instanceof byte[] && config.isUnserializeJsonContentBeforeSave()) {
+        if (isAPIContentType() && getContents() instanceof byte[]
+                && config.isUnserializeJsonContentBeforeSave()) {
             String json = new String((byte[]) getContents());
             if (json.startsWith("{")) {
                 setContentClass(Map.class.getName());

@@ -10,8 +10,10 @@ import com.plexobject.mock.util.YAMLUtils;
 
 public enum ExportFormat {
     JSON, YAML, Thymeleaf, Velocity;
-    public static String[] EXTS = { ExportFormat.Thymeleaf.getExtension(), ExportFormat.Velocity.getExtension(),
-            ExportFormat.YAML.getExtension(), ExportFormat.JSON.getExtension() };
+    public static String[] EXTS = { ExportFormat.Thymeleaf.getExtension(),
+            ExportFormat.Velocity.getExtension(),
+            ExportFormat.YAML.getExtension(),
+            ExportFormat.JSON.getExtension() };
     private ThymeleafUtils thymeleafUtils = new ThymeleafUtils();
     private VelocityUtils _velocityUtils;
 
@@ -45,13 +47,15 @@ public enum ExportFormat {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T read(File path, Class<?> klass, RequestInfo requestInfo, Configuration config) throws IOException {
+    public <T> T read(File path, Class<?> klass, RequestInfo requestInfo,
+            Configuration config) throws IOException {
         T value = null;
         if (path.getName().endsWith(Thymeleaf.getExtension())) {
             String contents = thymeleafUtils.transform(path, requestInfo);
             value = (T) YAMLUtils.read(contents, klass);
         } else if (path.getName().endsWith(Velocity.getExtension())) {
-            String contents = getVelocityUtils(config).transform(path, requestInfo);
+            String contents = getVelocityUtils(config).transform(path,
+                    requestInfo);
             value = (T) YAMLUtils.read(contents, klass);
         } else if (path.getName().endsWith(YAML.getExtension())) {
             value = (T) YAMLUtils.read(path, klass);
