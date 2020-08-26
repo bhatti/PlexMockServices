@@ -1,13 +1,17 @@
 package com.plexobject.mock.domain;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.plexobject.mock.util.FileUtils;
 import com.plexobject.mock.util.JSONUtils;
 
-public class ResponseInfo implements SerializationLifecycle {
+public class MockResponse implements SerializationLifecycle {
     private transient int responseCode;
     private Map<String, String> headers;
     private String contentType;
@@ -15,10 +19,10 @@ public class ResponseInfo implements SerializationLifecycle {
     private Object contents;
     private Configuration config;
 
-    public ResponseInfo() {
+    public MockResponse() {
     }
 
-    public ResponseInfo(int responseCode, String contentType,
+    public MockResponse(int responseCode, String contentType,
             Map<String, String> headers, Object contents,
             Configuration config) {
         this.responseCode = responseCode;
@@ -26,6 +30,20 @@ public class ResponseInfo implements SerializationLifecycle {
         this.headers = headers;
         this.contents = contents;
         this.config = config;
+    }
+
+    public static MockResponse from(HttpServletRequest req) throws IOException {
+        InputStream in = req.getInputStream();
+        byte[] data = null;
+        if (in != null) {
+            data = FileUtils.read(in);
+        } else {
+            data = new byte[0];
+        }
+        in.close();
+        MockResponse resp = JSONUtils.unmarshal(new String(data),
+                MockResponse.class);
+        return resp;
     }
 
     @JsonIgnore

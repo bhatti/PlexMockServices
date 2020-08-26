@@ -9,7 +9,7 @@ import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 
-import com.plexobject.mock.domain.RequestInfo;
+import com.plexobject.mock.domain.MockRequest;
 
 public class ThymeleafUtils {
     static class ParamsContext extends AbstractContext {
@@ -27,7 +27,7 @@ public class ThymeleafUtils {
         templateEngine.setTemplateResolver(templateResolver);
     }
 
-    public String transform(File file, RequestInfo requestInfo) {
+    public String transform(File file, MockRequest requestInfo) {
         ParamsContext ctx = new ParamsContext();
         ctx.setVariable("params", requestInfo.getParams());
         ctx.setVariable("headers", requestInfo.getHeaders());

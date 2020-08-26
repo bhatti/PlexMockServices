@@ -1,19 +1,19 @@
 package com.plexobject.mock.domain;
 
 public class RequestResponse {
-    private final RequestInfo request;
-    private final ResponseInfo response;
+    private final MockRequest request;
+    private final MockResponse response;
 
-    public RequestResponse(RequestInfo request, ResponseInfo response) {
+    public RequestResponse(MockRequest request, MockResponse response) {
         this.request = request;
         this.response = response;
     }
 
-    public RequestInfo getRequest() {
+    public MockRequest getRequest() {
         return request;
     }
 
-    public ResponseInfo getResponse() {
+    public MockResponse getResponse() {
         return response;
     }
 

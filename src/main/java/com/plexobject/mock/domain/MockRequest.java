@@ -13,15 +13,17 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.plexobject.mock.util.FileUtils;
 
-public class RequestInfo {
+public class MockRequest {
+    private static final String STORE_PREFIX = "__store__";
     private static final String MOCK_USE_HASH = "mockUseHash";
-    private static final String RECORD = "record";
     private static final String MOCK_MODE = "mockMode";
     private static final String REQUEST_ID = "requestId";
     private static final String MOCK_WAIT_TIME_MILLIS = "mockWaitTimeMillis";
     private static final String MOCK_RESPONSE_CODE = "mockResponseCode";
+    private static final String EXPORT_FORMAT = "exportFormat";
     //
     private static final String XMOCK_MODE = "XMockMode";
+    private static final String XEXPORT_FORMAT = "XExportFormat";
     private static final String XREQUEST_ID = "XRequestId";
     private static final String XMOCK_WAIT_TIME_MILLIS = "XMockWaitTimeMillis";
     private static final String XMOCK_RESPONSE_CODE = "XMockResponseCode";
@@ -38,14 +40,23 @@ public class RequestInfo {
     private final Object content;
     private final int mockWaitTimeMillis;
     private final int mockResponseCode;
-    private final boolean recordMode;
+    private final MockMode mockMode;
     private final Configuration config;
+    private final ExportFormat exportFormat;
+    private final boolean storeRequest;
 
-    public RequestInfo(final HttpServletRequest req, Configuration config)
+    public MockRequest(final HttpServletRequest req, Configuration config)
             throws IOException {
         this.config = config;
         String path = getPath(req);
-        url = config.getUrlPrefix() + path;
+        if (path.startsWith(STORE_PREFIX)) {
+            storeRequest = true;
+            path = path.substring(STORE_PREFIX.length());
+        } else {
+            storeRequest = false;
+        }
+
+        url = config.getTargetURL() + path;
         contentType = req.getContentType();
         headers = toHeaders(req);
         params = toParams(req);
@@ -58,19 +69,8 @@ public class RequestInfo {
                 XMOCK_WAIT_TIME_MILLIS);
         mockResponseCode = getInteger(req, MOCK_RESPONSE_CODE,
                 XMOCK_RESPONSE_CODE);
-        recordMode = isRecordMode(req, config);
-    }
-
-    private static Map<String, String> toParams(final HttpServletRequest req) {
-        Map<String, String> params = new HashMap<>();
-        Set<Map.Entry<String, String[]>> entries = (Set<Map.Entry<String, String[]>>) req
-                .getParameterMap().entrySet();
-        for (Map.Entry<String, String[]> e : entries) {
-            if (e.getValue().length > 0) {
-                params.put(e.getKey(), e.getValue()[0]);
-            }
-        }
-        return params;
+        exportFormat = getExportFormat(req, config.getDefaultExportFormat());
+        mockMode = getMockMode(req, config);
     }
 
     @JsonIgnore
@@ -103,8 +103,8 @@ public class RequestInfo {
     }
 
     @JsonIgnore
-    public boolean isRecordMode() {
-        return recordMode;
+    public MockMode getMockMode() {
+        return mockMode;
     }
 
     @JsonIgnore
@@ -166,11 +166,11 @@ public class RequestInfo {
         return value;
     }
 
-    private static boolean isRecordMode(HttpServletRequest req,
+    private static MockMode getMockMode(HttpServletRequest req,
             Configuration config) {
-        String reqMode = getValue(req, MOCK_MODE, XMOCK_MODE, null);
-        return reqMode != null ? RECORD.equalsIgnoreCase(reqMode)
-                : config.isRecordMode();
+        String reqMode = getValue(req, MOCK_MODE, XMOCK_MODE,
+                config.getMockMode().name()).toUpperCase();
+        return MockMode.valueOf(reqMode);
     }
 
     private String getRequestId(HttpServletRequest req, final String path,
@@ -226,4 +226,30 @@ public class RequestInfo {
         return Integer.parseInt(value);
     }
 
+    private static ExportFormat getExportFormat(HttpServletRequest req,
+            ExportFormat defaultExportFormat) {
+        String value = getValue(req, EXPORT_FORMAT, XEXPORT_FORMAT,
+                defaultExportFormat.name());
+        return ExportFormat.valueOf(value);
+    }
+
+    public boolean isStoreRequest() {
+        return storeRequest;
+    }
+
+    private static Map<String, String> toParams(final HttpServletRequest req) {
+        Map<String, String> params = new HashMap<>();
+        Set<Map.Entry<String, String[]>> entries = (Set<Map.Entry<String, String[]>>) req
+                .getParameterMap().entrySet();
+        for (Map.Entry<String, String[]> e : entries) {
+            if (e.getValue().length > 0) {
+                params.put(e.getKey(), e.getValue()[0]);
+            }
+        }
+        return params;
+    }
+
+    public ExportFormat getExportFormat() {
+        return exportFormat;
+    }
 }

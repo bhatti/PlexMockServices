@@ -8,11 +8,17 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import org.apache.log4j.Logger;
+
+import com.plexobject.mock.server.MockHandler;
+
 public class Configuration {
+    private static final Logger logger = Logger.getLogger(Configuration.class);
+
     private final int maxSamples;
     private final int connectionTimeoutMillis;
-    private final boolean recordMode;
-    private final String urlPrefix;
+    private final MockMode mockMode;
+    private final String targetURL;
     private final File dataDir;
     private final boolean randomResponseOrder;
     private final boolean saveRawRequestResponses;
@@ -36,7 +42,8 @@ public class Configuration {
                 "injectFailuresAndWaitTimesPerc");
         minWaitTimeMillis = getInteger(props, "minWaitTimeMillis");
         maxWaitTimeMillis = getInteger(props, "maxWaitTimeMillis");
-        recordMode = "true".equals(getString(props, "recordMode", "true"));
+        mockMode = MockMode
+                .valueOf(getString(props, "mockMode", "RECORD").toUpperCase());
         randomResponseOrder = "true"
                 .equals(getString(props, "randomResponseOrder", "false"));
         saveRawRequestResponses = "true"
@@ -50,9 +57,10 @@ public class Configuration {
                 getString(props, "defaultExportFormat", "YAML").toUpperCase());
         dataDir.mkdirs();
 
-        urlPrefix = getUrlPrefix(props);
+        targetURL = getUrlPrefix(props);
 
-        if (recordMode && (urlPrefix == null || urlPrefix.length() == 0)) {
+        if (mockMode == MockMode.RECORD
+                && (targetURL == null || targetURL.length() == 0)) {
             throw new RuntimeException(
                     "Running in record mode but mock.target.url property is not set");
         }
@@ -69,23 +77,33 @@ public class Configuration {
                         return name.startsWith(name);
                     }
                 });
-                return files != null && files.length > 0
+                File file = files != null && files.length > 0
                         ? files[random.nextInt(files.length)] : null;
+                logger.debug("Returning random read-only file " + file
+                        + " for name " + name + ", url " + url);
+                return file;
             } else {
                 int counter = getNextCounter(readCounters, name);
-                return getFileIfExists(name, counter);
+                File file = getFileIfExists(name, counter);
+                logger.debug("Returning read-only file " + file + " for name "
+                        + name + ", url " + url);
+                return file;
             }
         } else {
             int counter = getNextCounter(writeCounters, name);
-            return new File(getDataDir(), name + "_" + counter
+            File file = new File(getDataDir(), name + "_" + counter
                     + getDefaultExportFormat().getExtension());
+            logger.debug("Returning write-only file " + file + " for name "
+                    + name + ", url " + url);
+
+            return file;
         }
     }
 
     public File getNextIOCounterFile(String url, MethodType methodType) {
         final String name = normalizeName(url, methodType.name());
         int counter = getNextCounter(ioCounters, name);
-        return new File(getDataDir(), name + "_" + counter + ".io");
+        return new File(getDataDir(), name + "_" + counter + ".dat");
     }
 
     public int getMaxSamples() {
@@ -96,12 +114,12 @@ public class Configuration {
         return connectionTimeoutMillis;
     }
 
-    public boolean isRecordMode() {
-        return recordMode;
+    public MockMode getMockMode() {
+        return mockMode;
     }
 
-    public String getUrlPrefix() {
-        return urlPrefix;
+    public String getTargetURL() {
+        return targetURL;
     }
 
     public File getDataDir() {
@@ -152,7 +170,7 @@ public class Configuration {
     public String toString() {
         return "Configuration [maxSamples=" + maxSamples
                 + ", connectionTimeoutMillis=" + connectionTimeoutMillis
-                + ", recordMode=" + recordMode + ", urlPrefix=" + urlPrefix
+                + ", mockMode=" + mockMode + ", targetURL=" + targetURL
                 + ", dataDir=" + dataDir + ", randomResponseOrder="
                 + randomResponseOrder + "]";
     }

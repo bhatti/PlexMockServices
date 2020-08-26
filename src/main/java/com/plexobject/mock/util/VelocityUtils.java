@@ -10,7 +10,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 
 import com.plexobject.mock.domain.Configuration;
-import com.plexobject.mock.domain.RequestInfo;
+import com.plexobject.mock.domain.MockRequest;
 
 public class VelocityUtils {
     private final VelocityEngine ve;
@@ -32,7 +32,7 @@ public class VelocityUtils {
         ve.init();
     }
 
-    public String transform(File file, RequestInfo requestInfo) {
+    public String transform(File file, MockRequest requestInfo) {
         Template t = ve.getTemplate(file.getName());
         VelocityContext vc = new VelocityContext();
         vc.put("params", requestInfo.getParams());

@@ -23,8 +23,8 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 
 import com.plexobject.mock.domain.Configuration;
 import com.plexobject.mock.domain.MethodType;
-import com.plexobject.mock.domain.RequestInfo;
-import com.plexobject.mock.domain.ResponseInfo;
+import com.plexobject.mock.domain.MockRequest;
+import com.plexobject.mock.domain.MockResponse;
 
 public class HTTPUtils {
     private static final String CONTENT_TYPE = "Content-Type";
@@ -33,13 +33,18 @@ public class HTTPUtils {
     public HTTPUtils(Configuration config) {
         MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
         httpClient = new HttpClient(connectionManager);
-        httpClient.getParams().setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
-        httpClient.getParams().setSoTimeout(config.getConnectionTimeoutMillis());
-        httpClient.getParams().setParameter("http.socket.timeout", config.getConnectionTimeoutMillis());
-        httpClient.getParams().setParameter("http.connection.timeout", config.getConnectionTimeoutMillis());
+        httpClient.getParams()
+                .setCookiePolicy(CookiePolicy.BROWSER_COMPATIBILITY);
+        httpClient.getParams()
+                .setSoTimeout(config.getConnectionTimeoutMillis());
+        httpClient.getParams().setParameter("http.socket.timeout",
+                config.getConnectionTimeoutMillis());
+        httpClient.getParams().setParameter("http.connection.timeout",
+                config.getConnectionTimeoutMillis());
     }
 
-    public ResponseInfo invokeRemoteAPI(final MethodType methodType, final RequestInfo requestInfo)
+    public MockResponse invokeRemoteAPI(final MethodType methodType,
+            final MockRequest requestInfo)
             throws IOException, UnsupportedEncodingException {
         HttpMethodBase method = null;
         switch (methodType) {
@@ -66,26 +71,34 @@ public class HTTPUtils {
         return execute(method, requestInfo);
     }
 
-    private static void setEntityContent(final RequestInfo requestInfo, HttpMethodBase method)
-            throws UnsupportedEncodingException {
+    private static void setEntityContent(final MockRequest requestInfo,
+            HttpMethodBase method) throws UnsupportedEncodingException {
         if (requestInfo.getContent() instanceof byte[]) {
-            ((EntityEnclosingMethod) method).setRequestEntity(
-                    new ByteArrayRequestEntity((byte[]) requestInfo.getContent(), requestInfo.getContentType()));
+            ((EntityEnclosingMethod) method)
+                    .setRequestEntity(new ByteArrayRequestEntity(
+                            (byte[]) requestInfo.getContent(),
+                            requestInfo.getContentType()));
         } else if (requestInfo.getContent() instanceof String) {
             ((EntityEnclosingMethod) method).setRequestEntity(
-                    new StringRequestEntity((String) requestInfo.getContent(), requestInfo.getContentType(), "UTF-8"));
+                    new StringRequestEntity((String) requestInfo.getContent(),
+                            requestInfo.getContentType(), "UTF-8"));
         }
     }
 
-    private ResponseInfo execute(final HttpMethodBase method, final RequestInfo requestInfo) throws IOException {
+    private MockResponse execute(final HttpMethodBase method,
+            final MockRequest requestInfo) throws IOException {
         try {
-            for (Map.Entry<String, String> h : requestInfo.getHeaders().entrySet()) {
+            for (Map.Entry<String, String> h : requestInfo.getHeaders()
+                    .entrySet()) {
                 method.setRequestHeader(h.getKey(), h.getValue());
             }
-            if (requestInfo.getParams() != null && method instanceof PostMethod) {
-                for (Map.Entry<String, String> e : requestInfo.getParams().entrySet()) {
+            if (requestInfo.getParams() != null
+                    && method instanceof PostMethod) {
+                for (Map.Entry<String, String> e : requestInfo.getParams()
+                        .entrySet()) {
                     if (e.getValue() != null) {
-                        ((PostMethod) method).addParameter(e.getKey().trim(), e.getValue().trim());
+                        ((PostMethod) method).addParameter(e.getKey().trim(),
+                                e.getValue().trim());
                     }
                 }
             }
@@ -98,9 +111,11 @@ public class HTTPUtils {
                 data = new byte[0];
             }
             Header typeHeader = method.getResponseHeader(CONTENT_TYPE);
-            String contentType = typeHeader != null ? typeHeader.getValue() : null;
+            String contentType = typeHeader != null ? typeHeader.getValue()
+                    : null;
 
-            return new ResponseInfo(sc, contentType, toResponseHeaders(method), data, requestInfo.getConfig());
+            return new MockResponse(sc, contentType, toResponseHeaders(method),
+                    new String(data, "utf-8"), requestInfo.getConfig());
         } finally {
             try {
                 method.releaseConnection();
@@ -109,7 +124,8 @@ public class HTTPUtils {
         }
     }
 
-    private Map<String, String> toResponseHeaders(final HttpMethodBase post) throws HttpException {
+    private Map<String, String> toResponseHeaders(final HttpMethodBase post)
+            throws HttpException {
         Map<String, String> headers = new HashMap<>();
         for (Header h : post.getResponseHeaders()) {
             String value = h.getValue();

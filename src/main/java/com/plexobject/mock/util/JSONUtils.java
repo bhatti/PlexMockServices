@@ -17,19 +17,23 @@ public class JSONUtils {
         }
     }
 
-    public static Object unmarshal(String json, Class<?> klass) throws IOException {
-        return mapper.readValue(json, klass);
+    @SuppressWarnings("unchecked")
+    public static <T> T unmarshal(String json, Class<?> klass)
+            throws IOException {
+        return (T) mapper.readValue(json, klass);
     }
 
     public static void write(File outputFile, Object value) throws IOException {
         try {
-            mapper.writerWithDefaultPrettyPrinter().writeValue(outputFile, value);
+            mapper.writerWithDefaultPrettyPrinter().writeValue(outputFile,
+                    value);
         } catch (JsonProcessingException e) {
             throw new IOException(e);
         }
     }
 
-    public static Object read(File inputFile, Class<?> klass) throws IOException {
+    public static Object read(File inputFile, Class<?> klass)
+            throws IOException {
         Object value = mapper.readValue(inputFile, klass);
         return value;
     }

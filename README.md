@@ -5,6 +5,7 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and saves
 ## Features:
 - Record API response in easy to manage YAML/JSON files 
 - Playback YAML/JSON stored responses 
+- Store YAML/JSON stored responses 
 - Support for sequential or random responses when there are multiple response
   files for a given request.
 - Define dynamic responses using Velocity or Thymeleaf templates so that you can return
@@ -33,9 +34,9 @@ git clone git@github.com:bhatti/PlexMockServices.git
 ```
 ## Configuring:
 - Edit src/main/resources/application.properties
-* Specify default recordMode
+* Specify default mockMode
 ```xml
-            recordMode=true
+            mockMode=RECORD
 ```
 
 - Specify format of export files:
@@ -76,15 +77,20 @@ Note: It's recommended that you use deploy mock service as root context so mappi
 ```
 ### Record Mode
 ```bash
-  curl -X POST http://localhost:8000/myservice?mockMode=record -H 'Content-Type: application/json' -d {'json':true}
-  curl -H 'Content-Type: application/json' -H "XMockMode: record" http://localhost:8000/myservice
+  curl -X POST http://localhost:8000/myservice?mockMode=RECORD -H 'Content-Type: application/json' -d {'json':true}
+  curl -H 'Content-Type: application/json' -H "XMockMode: RECORD" http://localhost:8000/myservice
 ```
 Note: You can specify mockMode as a request parameter or a header parameter.
 
 ### Play Mode
 ```bash
-  curl -X POST http://localhost:8000/myservice?mockMode=play -H 'Content-Type: application/json' -d {'json':true}
-  curl -H 'Content-Type: application/json' -H "XMockMode: play" http://localhost:8000/myservice
+  curl -X POST http://localhost:8000/myservice?mockMode=PLAY -H 'Content-Type: application/json' -d {'json':true}
+  curl -H 'Content-Type: application/json' -H "XMockMode: PLAY " http://localhost:8000/myservice
+```
+### Store Mode for storing mock data explicitly
+```bash
+  curl -X POST http://localhost:8000/myservice?mockMode=STORE -H 'Content-Type: application/json' -d {'json':true}
+  curl -H 'Content-Type: application/json' -H "XMockMode: STORE" http://localhost:8000/myservice
 ```
 
 ### Specifying the id for request
@@ -189,7 +195,7 @@ contents:
 ```
 
 You can then call a curl request such as:
-curl -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack'
+curl -H 'Content-Type: application/json' -H "XMockMode: PLAY"  'http://localhost:8080?name=jack'
 and it would return
 ```json
 {
@@ -237,7 +243,7 @@ and it would return
 ```
 You can then mimick failure by passing mockResponseCode, e.g.
 ```bash 
-curl -v -H 'Content-Type: application/json' -H "XMockMode: play"  'http://localhost:8080?name=jack&mockResponseCode=404'
+curl -v -H 'Content-Type: application/json' -H "XMockMode: PLAY"  'http://localhost:8080?name=jack&mockResponseCode=404'
 ```
 This would return 404 return code.
 
@@ -265,11 +271,11 @@ contents:
 
 You can run curl command such as: 
 ```bash
-curl -H Content-Type: application/json -H "XMockMode: play" 'http://localhost:8080?name=bob' 
+curl -H Content-Type: application/json -H "XMockMode: PLAY" 'http://localhost:8080?name=bob' 
 ```
 to response as above or 
 ```bash
-curl -v -H Content-Type: application/json -H "XMockMode: play" 'http://localhost:8080?name=bob&mockResponseCode=400'
+curl -v -H Content-Type: application/json -H "XMockMode: PLAY" 'http://localhost:8080?name=bob&mockResponseCode=400'
 ```
 to simulate error response.
 

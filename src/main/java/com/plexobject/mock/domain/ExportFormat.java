@@ -47,7 +47,7 @@ public enum ExportFormat {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T read(File path, Class<?> klass, RequestInfo requestInfo,
+    public <T> T read(File path, Class<?> klass, MockRequest requestInfo,
             Configuration config) throws IOException {
         T value = null;
         if (path.getName().endsWith(Thymeleaf.getExtension())) {

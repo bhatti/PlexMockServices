@@ -18,9 +18,9 @@ import org.eclipse.jetty.server.Request;
 import com.plexobject.mock.domain.Configuration;
 import com.plexobject.mock.domain.ExportFormat;
 import com.plexobject.mock.domain.MethodType;
-import com.plexobject.mock.domain.RequestInfo;
+import com.plexobject.mock.domain.MockRequest;
 import com.plexobject.mock.domain.RequestResponse;
-import com.plexobject.mock.domain.ResponseInfo;
+import com.plexobject.mock.domain.MockResponse;
 import com.plexobject.mock.util.HTTPUtils;
 
 // socat -v tcp-listen:8080,reuseaddr,fork tcp:192.168.180.40:80
