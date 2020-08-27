@@ -112,30 +112,32 @@ public class MockData {
     }
 
     public String readLine(String name) throws IOException {
-        File file = config.find(name);
-        if (file == null) {
-            throw new IOException("Could not find " + name);
-        }
-        List<String> lines = textFiles.get(name);
-        if (lines == null) {
-            lines = FileUtils.readLines(file);
-            // removing Content-Disposition / Content-Type line
-            Iterator<String> it = lines.iterator();
-            while (it.hasNext()) {
-                String next = it.next().trim();
-                if (next.isEmpty() || next.startsWith(SEPARATOR)
-                        || next.startsWith(CONTENT_DISPOSITION)
-                        || next.startsWith(CONTENT_TYPE)) {
-                    it.remove();
+        synchronized (name.intern()) {
+            List<String> lines = textFiles.get(name);
+            if (lines == null) {
+                File file = config.find(name);
+                if (file == null) {
+                    throw new IOException("Could not find " + name);
                 }
+                lines = FileUtils.readLines(file);
+                // removing Content-Disposition / Content-Type line
+                Iterator<String> it = lines.iterator();
+                while (it.hasNext()) {
+                    String next = it.next().trim();
+                    if (next.isEmpty() || next.startsWith(SEPARATOR)
+                            || next.startsWith(CONTENT_DISPOSITION)
+                            || next.startsWith(CONTENT_TYPE)) {
+                        it.remove();
+                    }
+                }
+                textFiles.put(name, lines);
             }
-            textFiles.put(name, lines);
+            if (lines.size() == 0) {
+                throw new IOException("Empty file fo " + name);
+            }
+            Random random = new Random();
+            return lines.get(random.nextInt(lines.size()));
         }
-        if (lines.size() == 0) {
-            throw new IOException("Empty file fo " + name);
-        }
-        Random random = new Random();
-        return lines.get(random.nextInt(lines.size()));
     }
 
     public String uuid() {
