@@ -6,10 +6,10 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and saves
 - Record API response in easy to manage YAML/JSON files 
 - Playback YAML/JSON stored responses 
 - Store YAML/JSON stored responses 
+- Store data files for random responses
 - Support for sequential or random responses when there are multiple response
   files for a given request.
-- Define dynamic responses using Velocity or Thymeleaf templates so that you can return
-  responses based on the request parameters or other factors.
+- Define dynamic responses using Velocity or Thymeleaf templates so that you can return responses based on the request parameters or other factors.
 - Inject random failures and delays 
 - Specify response codes/delays in the request 
 
@@ -82,19 +82,46 @@ Note: It's recommended that you use deploy mock service as root context so mappi
 ```
 Note: You can specify mockMode as a request parameter or a header parameter.
 
+### ThymeLeaf support
+```
+curl -X POST "http://localhost:$port/API/mdm/devices/apps?searchBy=Udid&id=111&page=0&pageSize=10&mockMethod=GET&mockExportFormat=THYMELEAF" -H "XMockMode: store" -H 'Content-Type: application/json' -d @../fixtures/device_apps.th
+```
+
+### Velocity support
+```
+curl -X POST "http://localhost:$port/API/mdm/devices/search?page=0&pageSize=10&mockMethod=GET&mockExportFormat=VELOCITY" -H "XMockMode: store" -H 'Content-Type: application/json' -d @../fixtures/android_devices.vm
+```
+
 ### Play Mode
 ```bash
   curl -X POST http://localhost:8000/myservice?mockMode=PLAY -H 'Content-Type: application/json' -d {'json':true}
   curl -H 'Content-Type: application/json' -H "XMockMode: PLAY " http://localhost:8000/myservice
 ```
+
+### ThymeLeaf playback
+```bash
+curl "http://localhost:$port/API/mdm/devices/apps?searchBy=Udid&id=111&page=0&pageSize=10" -H "XMockMode: play" |jq '.'
+```
+
+### Velocity playback
+```bash
+curl "http://localhost:$port/API/mdm/devices/search?page=1&pageSize=10" -H "XMockMode: play" |jq '.'
+```
+
 ### Store Mode for storing mock data explicitly
 ```bash
   curl -X POST http://localhost:8000/myservice?mockMode=STORE -H 'Content-Type: application/json' -d {'json':true}
   curl -H 'Content-Type: application/json' -H "XMockMode: STORE" http://localhost:8000/myservice
 ```
 
+### Store text data file
+curl -X POST "http://localhost:$port/lines?mockMethod=GET&mockExportFormat=TEXT" -H "XMockMode: store" -H 'Content-Type: multipart/x-www-form-urlencoded' -F 'image=@../fixtures/lines.txt'
+
 ### Specifying the id for request
-   By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter requestId.
+   By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter mockRequestId.
+
+### Specifying method for request
+   By default method is derived from http request but you can specify mockMethod to overwrite it.
 
 ### Specifying wait time for request
    You can optionally specify mockWaitTimeMillis parameter to the HTTP request for adding wait time before response is sent. Alternatively, you can use injectFailuresAndWaitTimesPerc to add random failures or delays.
@@ -113,7 +140,6 @@ Here is an example of response that is saved in YAML format for easy editing:
 responseCode: 200
 headers: {}
 contentType: "application/json"
-contentClass: "java.util.Map"
 contents:
   findByAccountsResponse:
   - date: 1452739584192
@@ -168,6 +194,36 @@ contents:
     fillDate: 1489812975262
 ```
 
+## Static JSON output files
+Here is an example of response that is saved in JSON format for easy editing:
+```json
+{
+  "responseCode": 200,
+  "headers": {
+    "Transfer-Encoding": "chunked",
+    "Server": "SampleAPI",
+    "Connection": "keep-alive",
+    "Date": "Wed, 26 Aug 2020 19:57:33 GMT",
+    "Content-Type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "ApplicationGroupID": "10335",
+    "Name": "ios-white",
+    "Platform": "Apple",
+    "AppGroupType": "Whitelist",
+    "Description": "",
+    "ManagedByOrganizationGroupID": "7233",
+    "OrganizationGroups": [
+      {
+        "Name": "Tokyo",
+        "Id": "7233"
+      }
+    ]
+  }
+}
+```
+
 ## Dynamic Velocity output files
 Here is an example of response that is saved in velocity template format, you can
 refer http://velocity.apache.org/engine/1.7/user-guide.html for the syntax
@@ -177,70 +233,51 @@ Note: PlexMockServices will automatically register all parameters as velcoity
 variables so that you can refer them in the template easily.
 
 ```vm
----
-responseCode: #if($!{$mockResponseCode}) 200 #else $mockResponseCode
+{
+#if ( !$mockResponseCode )
+#set ( $mockResponseCode = 200 )
 #end
-headers: {}
-contentType: "application/json; charset=utf-8"
-contentClass: "java.util.Map"
-contents: 
+  "responseCode": #if($!{$mockResponseCode}) 200 #else $mockResponseCode,
+#end
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "Devices": [
 #set($start = 1)
-#set($end = 10)
+#set($end = 100)
 #set($range = [$start..$end])
 #foreach($i in $range)
-  $i:
-    name: "$name $i"
-    id: $i
+      {
+	  "EasIds": {},
+	  "Udid": "$helper.uuid()",
+      "LocationGroupId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "$helper.city(5)",
+	    "Udid": "$helper.uuid()"
+      },
+      "LocationGroupName": "$helper.city(5)",
+      "Model": "google $helper.androidModel()",
+	  "Udid": "$helper.uuid()"
+      },
 #end
-```
-
-You can then call a curl request such as:
-curl -H 'Content-Type: application/json' -H "XMockMode: PLAY"  'http://localhost:8080?name=jack'
-and it would return
-```json
-{
-	"1": {
-		"name": "jack 1",
-		"id": 1
-	},
-	"2": {
-		"name": "jack 2",
-		"id": 2
-	},
-	"3": {
-		"name": "jack 3",
-		"id": 3
-	},
-	"4": {
-		"name": "jack 4",
-		"id": 4
-	},
-	"5": {
-		"name": "jack 5",
-		"id": 5
-	},
-	"6": {
-		"name": "jack 6",
-		"id": 6
-	},
-	"7": {
-		"name": "jack 7",
-		"id": 7
-	},
-	"8": {
-		"name": "jack 8",
-		"id": 8
-	},
-	"9": {
-		"name": "jack 9",
-		"id": 9
-	},
-	"10": {
-		"name": "jack 10",
-		"id": 10
-	}
+    ],
+    "Page": $page,
+    "PageSize": $pageSize,
+    "Total": $pageSize
+  }
 }
 ```
+
+You can then upload velocity and call a curl request such as:
+```
+curl -X POST "http://localhost:$port/API/mdm/devices/search?page=0&pageSize=10&mockMethod=GET&mockExportFormat=VELOCITY" -H "XMockMode: store" -H 'Content-Type: application/json' -d @../fixtures/android_devices.vm
+curl "http://localhost:$port/API/mdm/devices/search?page=0&pageSize=10" -H "XMockMode: play" |jq '.'
+```
+
 You can then mimick failure by passing mockResponseCode, e.g.
 ```bash 
 curl -v -H 'Content-Type: application/json' -H "XMockMode: PLAY"  'http://localhost:8080?name=jack&mockResponseCode=404'
@@ -256,28 +293,44 @@ Note: PlexMockServices will automatically register all parameters as Thymeleaf
 variables so that you can refer them in the template easily.
 
 ```th 
----
-responseCode: [(${mockResponseCode}? ${mockResponseCode} : 200)]
-headers: {}
-contentType: "application/json; charset=utf-8"
-contentClass: "java.util.Map"
-contents: 
-[# th:each="i : ${#numbers.sequence(1,10)}"]
-  "[(${i})]":
-    name: "[(${name})] [(${i})]"
-    id: [(${i})] 
+{
+  "responseCode": [(${mockResponseCode}? ${mockResponseCode} : 200)],
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "Devices": [
+[# th:each="i : ${#numbers.sequence(1,pageSize)}"]
+      {
+	  "EasIds": {},
+      "LocationGroupName": "[(${helper.city(5)})]",
+      "UserId": {
+        "Id": {
+          "Value": [(${helper.number()})]
+        },
+        "Name": "[(${helper.name()})] [(${i})]",
+	    "Udid": "[(${helper.uuid()})]"
+      },
+	  "UserName": "[(${helper.string()})]",
+      "DataProtectionStatus": [(${helper.number()})],
+	  "UserEmailAddress": "[(${helper.email()})]",
+      },
 [/]
+    ],
+    "Page": [(${page})],
+    "PageSize": [(${pageSize})],
+    "Total": [(${pageSize})]
+  }
+}
+
 ```
 
-You can run curl command such as: 
+You can run uplaod template file and use curl command such as: 
 ```bash
-curl -H Content-Type: application/json -H "XMockMode: PLAY" 'http://localhost:8080?name=bob' 
+curl -X POST "http://localhost:$port/API/mdm/devices/search?page=1&pageSize=10&mockMethod=GET&mockExportFormat=THYMELEAF" -H "XMockMode: store" -H 'Content-Type: application/json' -d @../fixtures/ios_devices.th
+curl "http://localhost:$port/API/mdm/devices/search?page=1&pageSize=10" -H "XMockMode: play" |jq '.'
 ```
-to response as above or 
-```bash
-curl -v -H Content-Type: application/json -H "XMockMode: PLAY" 'http://localhost:8080?name=bob&mockResponseCode=400'
-```
-to simulate error response.
 
 ## Sample App
 After starting server by:
@@ -290,7 +343,7 @@ You can find a sample REST app based on node.js restify under sample folder, whi
 cd sample
 ./server.sh
 ```
-You can then look at client.sh for sample curl commands.
+You can then look at fixtures folder for sample templates and client.sh for sample curl commands.
 
 ## Contact
 Thank you for downloading PlexMockServices. Please send questions or suggestions to bhatti AT plexobject.com.

@@ -1,0 +1,54 @@
+{
+  "responseCode": 200,
+  "headers": {
+    "Transfer-Encoding": "chunked",
+    "Server": "SampleAPI",
+    "Connection": "keep-alive",
+    "Date": "Wed, 26 Aug 2020 19:57:33 GMT",
+    "Content-Type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "ApplicationGroupID": "10427",
+    "Name": "android-black",
+    "Platform": "Android",
+    "AppGroupType": "Blacklist",
+    "Description": "",
+    "ManagedByOrganizationGroupID": "7233",
+    "OrganizationGroups": [
+      {
+        "Name": "London",
+        "Id": "7233"
+      }
+    ],
+    "UserGroups": [],
+    "DeviceOwnership": "Any",
+    "IsActive": false,
+    "Applications": [
+      {
+        "Name": "Marriott",
+        "BundleId": "com.marriott.mrt"
+      },
+      {
+        "Name": "Zoom",
+        "BundleId": "us.zoom.videomeetings"
+      },
+      {
+        "Name": "Lyft",
+        "BundleId": "me.lyft.android"
+      },
+      {
+        "Name": "Chrome",
+        "BundleId": "com.android.chrome"
+      },
+      {
+        "Name": "YouTube",
+        "BundleId": "com.google.android.youtube"
+      },
+      {
+        "Name": "PingTools",
+        "BundleId": "ua.com.streamsoft.pingtools"
+      }
+    ]
+  }
+}

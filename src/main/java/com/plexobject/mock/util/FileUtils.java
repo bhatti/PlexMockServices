@@ -2,30 +2,48 @@ package com.plexobject.mock.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
 public class FileUtils {
     private static final Logger LOGGER = Logger.getLogger(FileUtils.class);
 
-    private final static String SKIP_PATTERN = System.getProperty("skip.pattern",
+    private final static String SKIP_PATTERN = System.getProperty(
+            "skip.pattern",
             "(<authToken>[0-9a-z\\-]+<.authToken>|<twoFactorChallenge>[0-9a-z\\-]+<.twoFactorChallenge>)");
 
     public static void write(byte[] data, File path) throws IOException {
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(path));
+        BufferedOutputStream out = new BufferedOutputStream(
+                new FileOutputStream(path));
         out.write(data);
         out.close();
+    }
+
+    public static List<String> readLines(File file) throws IOException {
+        List<String> lines = new ArrayList<>();
+        try (BufferedReader bufferedReader = new BufferedReader(
+                new FileReader(file))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                lines.add(line);
+            }
+        }
+        return lines;
     }
 
     public static byte[] read(InputStream in) throws IOException {
@@ -44,14 +62,16 @@ public class FileUtils {
         if (!path.exists() || !path.canRead()) {
             throw new FileNotFoundException("Could not read " + path);
         }
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(path));
+        BufferedInputStream in = new BufferedInputStream(
+                new FileInputStream(path));
         return read(in);
     }
 
     public static void writeObject(Object obj, File path) {
         ObjectOutputStream out = null;
         try {
-            out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(path)));
+            out = new ObjectOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(path)));
             out.writeObject(obj);
             out.close();
         } catch (IOException e) {
@@ -74,7 +94,8 @@ public class FileUtils {
 
         ObjectInputStream in = null;
         try {
-            in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(path)));
+            in = new ObjectInputStream(
+                    new BufferedInputStream(new FileInputStream(path)));
             return in.readObject();
         } catch (IOException e) {
             System.err.println("Failed to read filename " + path);
@@ -94,7 +115,8 @@ public class FileUtils {
     public static String hash(final String text) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
-            byte[] bytes = text.toLowerCase().replace(SKIP_PATTERN, "").getBytes();
+            byte[] bytes = text.toLowerCase().replace(SKIP_PATTERN, "")
+                    .getBytes();
             md.update(bytes, 0, bytes.length);
             final byte[] sha1hash = md.digest();
             return convertToHex(sha1hash);

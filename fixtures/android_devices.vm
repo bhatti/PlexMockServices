@@ -1,0 +1,169 @@
+{
+#if ( !$mockResponseCode )
+#set ( $mockResponseCode = 200 )
+#end
+  "responseCode": #if($!{$mockResponseCode}) 200 #else $mockResponseCode,
+#end
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "Devices": [
+#set($start = 1)
+#set($end = 100)
+#set($range = [$start..$end])
+#foreach($i in $range)
+      {
+	  "EasIds": {},
+	  "Udid": "$helper.uuid()",
+	  "SerialNumber": "$helper.uuid()",
+	  "MacAddress": "$helper.uuid()",
+	  "Imei": "$helper.uuid()",
+	  "AssetNumber": "$helper.uuid()",
+      "EasId": "",
+      "DeviceFriendlyName": "Device for $helper.name() $i",
+      "LocationGroupId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "$helper.city(5)",
+	    "Udid": "$helper.uuid()"
+      },
+      "LocationGroupName": "$helper.city(5)",
+      "UserId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "$helper.name() $i",
+	    "Udid": "$helper.uuid()"
+      },
+      "UserName": "$helper.string()",
+      "DataProtectionStatus": $helper.number(),
+      "UserEmailAddress": "$helper.email()",
+      "Ownership": "C",
+      "PlatformId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "Android"
+      },
+      "Platform": "Android",
+      "ModelId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "google $helper.androidModel()"
+      },
+      "Model": "google $helper.androidModel()",
+      "OperatingSystem": "$helper.androidVersion()",
+      "PhoneNumber": "",
+      "LastSeen": "$helper.date()",
+      "EnrollmentStatus": "Enrolled",
+      "ComplianceStatus": "NonCompliant",
+      "CompromisedStatus": false,
+      "LastEnrolledOn": "$helper.date()",
+      "LastComplianceCheckOn": "$helper.date()",
+      "LastCompromisedCheckOn": "$helper.date()",
+      "IsSupervised": $helper.bool(),
+      "VirtualMemory": $helper.number(),
+      "IsDeviceDNDEnabled": $helper.bool(),
+      "IsDeviceLocatorEnabled": $helper.bool(),
+      "IsCloudBackupEnabled": $helper.bool(),
+      "IsActivationLockEnabled": $helper.bool(),
+      "IsNetworkTethered": $helper.bool(),
+      "BatteryLevel": "$helper.percent()",
+      "IsRoaming": $helper.bool(),
+      "SystemIntegrityProtectionEnabled": $helper.bool(),
+      "ProcessorArchitecture": $helper.number(),
+      "TotalPhysicalMemory": $helper.number(),
+      "AvailablePhysicalMemory": $helper.number(),
+      "OSBuildVersion": "",
+      "EnrollmentUserUuid": "$helper.uuid()",
+      "ManagedBy": $helper.number(),
+      "WifiSsid": "$helper.uuid()",
+      "Id": {
+        "Value": $helper.number()
+      },
+	  "Udid": "$helper.uuid()"
+      },
+#end
+      {
+	  "EasIds": {},
+	  "Udid": "$helper.uuid()",
+	  "SerialNumber": "$helper.uuid()",
+	  "MacAddress": "$helper.uuid()",
+	  "Imei": "$helper.uuid()",
+	  "AssetNumber": "$helper.uuid()",
+      "EasId": "",
+      "DeviceFriendlyName": "Device for $helper.name()",
+      "LocationGroupId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "$helper.city(5)",
+	    "Udid": "$helper.uuid()"
+      },
+      "LocationGroupName": "$helper.city(5)",
+      "UserId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "$helper.name() $i",
+	    "Udid": "$helper.uuid()"
+      },
+      "UserName": "$helper.string()",
+      "DataProtectionStatus": $helper.number(),
+      "UserEmailAddress": "$helper.email()",
+      "Ownership": "C",
+      "PlatformId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "Android"
+      },
+      "Platform": "Android",
+      "ModelId": {
+        "Id": {
+          "Value": $helper.number()
+        },
+        "Name": "google $helper.androidModel()"
+      },
+      "Model": "google $helper.androidModel()",
+      "OperatingSystem": "$helper.androidVersion()",
+      "PhoneNumber": "",
+      "LastSeen": "$helper.date()",
+      "EnrollmentStatus": "Enrolled",
+      "ComplianceStatus": "NonCompliant",
+      "CompromisedStatus": false,
+      "LastEnrolledOn": "$helper.date()",
+      "LastComplianceCheckOn": "$helper.date()",
+      "LastCompromisedCheckOn": "$helper.date()",
+      "IsSupervised": $helper.bool(),
+      "VirtualMemory": $helper.number(),
+      "IsDeviceDNDEnabled": $helper.bool(),
+      "IsDeviceLocatorEnabled": $helper.bool(),
+      "IsCloudBackupEnabled": $helper.bool(),
+      "IsActivationLockEnabled": $helper.bool(),
+      "IsNetworkTethered": $helper.bool(),
+      "BatteryLevel": "$helper.percent()",
+      "IsRoaming": $helper.bool(),
+      "SystemIntegrityProtectionEnabled": $helper.bool(),
+      "ProcessorArchitecture": $helper.number(),
+      "TotalPhysicalMemory": $helper.number(),
+      "AvailablePhysicalMemory": $helper.number(),
+      "OSBuildVersion": "",
+      "EnrollmentUserUuid": "$helper.uuid()",
+      "ManagedBy": $helper.number(),
+      "WifiSsid": "$helper.uuid()",
+      "Id": {
+        "Value": $helper.number()
+      },
+	  "Udid": "$helper.uuid()"
+      }
+    ],
+    "Page": $page,
+    "PageSize": $pageSize,
+    "Total": $pageSize
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "responseCode": #if($!{$mockResponseCode}) 200 #else $mockResponseCode,
+#end
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "Devices": [
+#set($start = 1)
+#set($end = 10)
+#set($range = [$start..$end])
+#foreach($i in $range)
+      {
+	  "uuid": "$helper.uuid()",
+      "name": "$name $i",
+      "id": $i
+      },
+#end
+ 	  {
+	  "uuid": "$helper.uuid()",
+      "name": "$name last",
+      "id": 99
+      }
+    ]
+  }
+}
+

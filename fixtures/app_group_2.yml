@@ -1,0 +1,70 @@
+{
+  "responseCode": 200,
+  "headers": {
+    "Transfer-Encoding": "chunked",
+    "Server": "SampleAPI",
+    "Connection": "keep-alive",
+    "Date": "Wed, 26 Aug 2020 19:57:33 GMT",
+    "Content-Type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "ApplicationGroupID": "10336",
+    "Name": "ios-black",
+    "Platform": "Apple",
+    "AppGroupType": "Blacklist",
+    "Description": "",
+    "ManagedByOrganizationGroupID": "7233",
+    "OrganizationGroups": [
+      {
+        "Name": "Chicago",
+        "Id": "7233"
+      }
+    ],
+    "UserGroups": [],
+    "DeviceOwnership": "Any",
+    "IsActive": false,
+    "Applications": [
+      {
+        "Name": "Fortnite",
+        "BundleId": "com.chairentertainment.Fortnite"
+      },
+      {
+        "Name": "Color Bump 3D",
+        "BundleId": "com.colorup.game"
+      },
+      {
+        "Name": "KickTheBuddy",
+        "BundleId": "com.playgendary.ktb2"
+      },
+      {
+        "Name": "Telegram",
+        "BundleId": "ph.telegra.Telegraph"
+      },
+      {
+        "Name": "Zoom",
+        "BundleId": "us.zoom.videomeetings"
+      },
+      {
+        "Name": "Vivino",
+        "BundleId": "com.vivino"
+      },
+      {
+        "Name": "Hub",
+        "BundleId": "com.air-watch.agent"
+      },
+      {
+        "Name": "Prime Video",
+        "BundleId": "com.amazon.aiv.AIVApp"
+      },
+      {
+        "Name": "Slides",
+        "BundleId": "com.google.Slides"
+      },
+      {
+        "Name": "Uber",
+        "BundleId": "com.ubercab.UberClient"
+      }
+    ]
+  }
+}

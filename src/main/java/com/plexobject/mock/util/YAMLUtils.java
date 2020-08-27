@@ -18,7 +18,8 @@ public class YAMLUtils {
         }
     }
 
-    public static Object unmarshal(String yaml, Class<?> klass) throws IOException {
+    public static Object unmarshal(String yaml, Class<?> klass)
+            throws IOException {
         return mapper.readValue(yaml, klass);
     }
 
@@ -31,11 +32,13 @@ public class YAMLUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T read(File inputFile, Class<?> klass) throws IOException {
-        return  (T) mapper.readValue(inputFile, klass);
+    public static <T> T read(File inputFile, Class<?> klass)
+            throws IOException {
+        return (T) mapper.readValue(inputFile, klass);
     }
 
-    public static Object read(String input, Class<?> klass) throws IOException {
-        return mapper.readValue(input, klass);
+    @SuppressWarnings("unchecked")
+    public static <T> T read(String input, Class<?> klass) throws IOException {
+        return (T) mapper.readValue(input, klass);
     }
 }

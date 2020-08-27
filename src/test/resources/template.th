@@ -1,0 +1,25 @@
+{
+
+  "responseCode": [(${mockResponseCode}? ${mockResponseCode} : 200)],
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",  
+  "contents": {
+    "Devices": [
+[# th:each="i : ${#numbers.sequence(1,10)}"]
+      {
+	  "uuid": "[(${helper.uuid()})]",
+      "name": "[(${name})] [(${i})]",
+      "id": [(${i})]
+      },
+[/]
+ 	  {
+	  "uuid": "[(${helper.uuid()})]",
+      "name": "last jake",
+      "id": 99
+      }
+    ]
+  }
+}
+

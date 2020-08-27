@@ -3,24 +3,31 @@ package com.plexobject.mock.domain;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
 
 import org.apache.log4j.Logger;
+import org.thymeleaf.util.StringUtils;
 
-import com.plexobject.mock.server.MockHandler;
-
+/**
+ * This class defines common configuraiton
+ * 
+ * @author shahzad bhatti
+ *
+ */
 public class Configuration {
     private static final Logger logger = Logger.getLogger(Configuration.class);
 
-    private final int maxSamples;
     private final int connectionTimeoutMillis;
     private final MockMode mockMode;
     private final String targetURL;
     private final File dataDir;
-    private final boolean randomResponseOrder;
     private final boolean saveRawRequestResponses;
     private final boolean unserializeJsonContentBeforeSave;
     private final boolean saveAPIResponsesOnly;
@@ -28,24 +35,18 @@ public class Configuration {
     private final int minWaitTimeMillis;
     private final int maxWaitTimeMillis;
     private final ExportFormat defaultExportFormat;
-    private Map<String, Integer> readCounters = new HashMap<>();
-    private Map<String, Integer> writeCounters = new HashMap<>();
-    private Map<String, Integer> ioCounters = new HashMap<>();
 
     public Configuration() throws IOException {
         Properties props = new Properties();
         props.load(getClass().getClassLoader()
                 .getResourceAsStream("application.properties"));
         connectionTimeoutMillis = getInteger(props, "connectionTimeoutMillis");
-        maxSamples = getInteger(props, "maxSamples");
         injectFailuresAndWaitTimesPerc = getInteger(props,
                 "injectFailuresAndWaitTimesPerc");
         minWaitTimeMillis = getInteger(props, "minWaitTimeMillis");
         maxWaitTimeMillis = getInteger(props, "maxWaitTimeMillis");
         mockMode = MockMode
                 .valueOf(getString(props, "mockMode", "RECORD").toUpperCase());
-        randomResponseOrder = "true"
-                .equals(getString(props, "randomResponseOrder", "false"));
         saveRawRequestResponses = "true"
                 .equals(getString(props, "saveRawRequestResponses", "false"));
         saveAPIResponsesOnly = "true"
@@ -66,48 +67,63 @@ public class Configuration {
         }
     }
 
-    public File toFile(String url, MethodType methodType, boolean readOnly) {
+    public File find(String name) throws IOException {
+        Optional<Path> path = Files
+                .walk(Paths.get(getDataDir().getAbsolutePath()))
+                .filter(Files::isRegularFile)
+                .filter(f -> f.toFile().getName().equals(name)).findAny();
+        return path.isPresent() ? path.get().toFile() : null;
+    }
+
+    public File toReadFile(MockRequest req) throws URISyntaxException {
         Random random = new Random();
-        final String name = normalizeName(url, methodType.name());
-        if (readOnly) {
-            if (isRandomResponseOrder()) {
-                File[] files = getDataDir().listFiles(new FilenameFilter() {
-                    @Override
-                    public boolean accept(File dir, String name) {
-                        return name.startsWith(name);
-                    }
-                });
-                File file = files != null && files.length > 0
-                        ? files[random.nextInt(files.length)] : null;
-                logger.debug("Returning random read-only file " + file
-                        + " for name " + name + ", url " + url);
-                return file;
-            } else {
-                int counter = getNextCounter(readCounters, name);
-                File file = getFileIfExists(name, counter);
-                logger.debug("Returning read-only file " + file + " for name "
-                        + name + ", url " + url);
-                return file;
-            }
-        } else {
-            int counter = getNextCounter(writeCounters, name);
-            File file = new File(getDataDir(), name + "_" + counter
-                    + getDefaultExportFormat().getExtension());
-            logger.debug("Returning write-only file " + file + " for name "
-                    + name + ", url " + url);
+        File dir = normalizeDir(new URI(req.getURL()), getDataDir());
 
-            return file;
+        File[] files = findFiles(req, dir, true);
+        if (files.length == 0) {
+            files = findFiles(req, dir, false);
         }
+        File file = files.length > 0 ? files[random.nextInt(files.length)]
+                : null;
+        logger.debug("Returning random read-only file " + file + " for " + req);
+        return file;
     }
 
-    public File getNextIOCounterFile(String url, MethodType methodType) {
-        final String name = normalizeName(url, methodType.name());
-        int counter = getNextCounter(ioCounters, name);
-        return new File(getDataDir(), name + "_" + counter + ".dat");
+    private File[] findFiles(MockRequest req, File dir, boolean skipHash) {
+        File[] files = dir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.startsWith(req.getMethod().name())
+                        && (skipHash || name.contains(req.getHash()))
+                        && (StringUtils.isEmpty(req.getRequestId())
+                                || name.contains(req.getRequestId()));
+            }
+        });
+        return files;
     }
 
-    public int getMaxSamples() {
-        return maxSamples;
+    public File toWriteFile(MockRequest req) throws URISyntaxException {
+        File file = req.getExportFormat() == ExportFormat.TEXT
+                ? new File(getDataDir(),
+                        new URI(req.getURL()).getPath()
+                                + req.getExportFormat().getExtension())
+                : new File(normalizeDir(new URI(req.getURL()), getDataDir()),
+                        req.getMethod().name() + "_" + req.getRequestId() + "_"
+                                + req.getHash()
+                                + req.getExportFormat().getExtension());
+        logger.debug("Returning write-only file " + file + " for " + req);
+
+        return file;
+    }
+
+    public File getNextIOCounterFile(MockRequest req)
+            throws URISyntaxException {
+        File dir = normalizeDir(new URI(req.getURL()), getDataDir());
+        File file = new File(dir, req.getMethod().name() + "_"
+                + req.getRequestId() + "_" + req.getHash() + ".dat");
+        logger.debug("Returning io file " + file + " for " + req);
+
+        return file;
     }
 
     public int getConnectionTimeoutMillis() {
@@ -124,10 +140,6 @@ public class Configuration {
 
     public File getDataDir() {
         return dataDir;
-    }
-
-    public boolean isRandomResponseOrder() {
-        return randomResponseOrder;
     }
 
     public int getInjectFailuresAndWaitTimesPerc() {
@@ -166,40 +178,30 @@ public class Configuration {
         return saveRawRequestResponses;
     }
 
+    public boolean isUnserializeJsonContentBeforeSave() {
+        return unserializeJsonContentBeforeSave;
+    }
+
+    public boolean isSaveAPIResponsesOnly() {
+        return saveAPIResponsesOnly;
+    }
+
     @Override
     public String toString() {
-        return "Configuration [maxSamples=" + maxSamples
-                + ", connectionTimeoutMillis=" + connectionTimeoutMillis
-                + ", mockMode=" + mockMode + ", targetURL=" + targetURL
-                + ", dataDir=" + dataDir + ", randomResponseOrder="
-                + randomResponseOrder + "]";
+        return "Configuration [connectionTimeoutMillis="
+                + connectionTimeoutMillis + ", mockMode=" + mockMode
+                + ", targetURL=" + targetURL + ", dataDir=" + dataDir + "]";
     }
 
-    private int getNextCounter(Map<String, Integer> counters, String name) {
-        Integer counter = counters.get(name);
-        if (counter == null) {
-            counter = 1;
-        } else {
-            counter = counter + 1;
-        }
-        if (counter > getMaxSamples()) {
-            counter = 1;
-        }
-        counters.put(name, counter);
-        return counter;
-    }
+    //////////////////// PRIVATE METHODS //////////////////
 
-    private static String normalizeName(String url, String operation) {
-        int q = url.indexOf("?");
-        if (q != -1) {
-            url = url.substring(0, q);
+    private static File normalizeDir(URI url, File dir) {
+        if (!StringUtils.isEmpty(url.getPath())) {
+            dir = new File(dir, url.getPath().replace("/",
+                    System.getProperty("file.separator")));
         }
-        if (url.startsWith("/")) {
-            url = url.substring(1);
-        }
-        url = url.replaceAll("[\\&\\/\\?:;,\\s]", "_");
-
-        return url.length() > 0 ? operation + "_" + url : operation;
+        dir.mkdirs();
+        return dir;
     }
 
     private static String getString(Properties props, String name,
@@ -224,26 +226,4 @@ public class Configuration {
         return Integer.parseInt(getString(props, name, "0"));
     }
 
-    private File getFileIfExists(String name, int counter) {
-        for (String ext : ExportFormat.EXTS) {
-            File file = new File(getDataDir(), name + "_" + counter + ext);
-            if (file.exists()) {
-                return file;
-            }
-        }
-        if (counter > 1) {
-            counter = 1;
-            readCounters.remove(name);
-            return getFileIfExists(name, counter);
-        }
-        return null;
-    }
-
-    public boolean isUnserializeJsonContentBeforeSave() {
-        return unserializeJsonContentBeforeSave;
-    }
-
-    public boolean isSaveAPIResponsesOnly() {
-        return saveAPIResponsesOnly;
-    }
 }

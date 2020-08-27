@@ -1,0 +1,34 @@
+{
+  "responseCode": 200,
+  "headers": {
+    "Transfer-Encoding": "chunked",
+    "Server": "SampleAPI",
+    "Connection": "keep-alive",
+    "Date": "Wed, 26 Aug 2020 19:57:33 GMT",
+    "Content-Type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "ApplicationGroupID": "10335",
+    "Name": "ios-white",
+    "Platform": "Apple",
+    "AppGroupType": "Whitelist",
+    "Description": "",
+    "ManagedByOrganizationGroupID": "7233",
+    "OrganizationGroups": [
+      {
+        "Name": "Tokyo",
+        "Id": "7233"
+      }
+    ],
+    "UserGroups": [],
+    "DeviceOwnership": "Any",
+    "IsActive": false,
+    "Applications": [
+      {
+        "Name": "VMware",
+        "BundleId": "com.vmworkspace"
+      }
+    ]
+  }
+}

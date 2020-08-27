@@ -1,0 +1,31 @@
+{
+  "responseCode": [(${mockResponseCode}? ${mockResponseCode} : 200)],
+  "headers": {
+    "content-type": "application/json; charset=utf-8"
+  },
+  "contentType": "application/json; charset=utf-8",
+  "contents": {
+    "DeviceApps": [
+[# th:each="i : ${#numbers.sequence(1,pageSize)}"]
+	  { 
+        [(${helper.readLine('lines.txt')})], 
+        "Size": [(${helper.number()})],
+        "Type": "Public", 
+        "Status": 2,
+        "IsManaged": false 
+      },
+[/]
+	  { 
+        [(${helper.readLine('lines.txt')})], 
+        "Size": [(${helper.number()})],
+        "Type": "Public", 
+        "Status": 2,
+        "IsManaged": false 
+      }
+    ],
+    "Page": [(${page})],
+    "PageSize": [(${pageSize})],
+    "Total": [(${pageSize})]
+  }
+}
+

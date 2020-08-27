@@ -3,10 +3,15 @@ package com.plexobject.mock.util;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONUtils {
+    private static final Logger logger = Logger.getLogger(JSONUtils.class);
+
     private static ObjectMapper mapper = new ObjectMapper();
 
     public static String marshal(Object value) throws IOException {
@@ -32,9 +37,19 @@ public class JSONUtils {
         }
     }
 
-    public static Object read(File inputFile, Class<?> klass)
+    @SuppressWarnings("unchecked")
+    public static <T> T read(String json, Class<?> klass) throws IOException {
+        try {
+            return (T) mapper.readValue(json, klass);
+        } catch (JsonMappingException e) {
+            logger.warn("Failed to parse " + json);
+            throw e;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T read(File inputFile, Class<?> klass)
             throws IOException {
-        Object value = mapper.readValue(inputFile, klass);
-        return value;
+        return (T) mapper.readValue(inputFile, klass);
     }
 }

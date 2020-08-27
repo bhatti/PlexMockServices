@@ -12,7 +12,6 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.cookie.CookiePolicy;
-import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -49,21 +48,21 @@ public class HTTPUtils {
         HttpMethodBase method = null;
         switch (methodType) {
         case GET:
-            method = new GetMethod(requestInfo.getUrl());
+            method = new GetMethod(requestInfo.getURL());
             break;
         case POST:
-            method = new PostMethod(requestInfo.getUrl());
+            method = new PostMethod(requestInfo.getURL());
             setEntityContent(requestInfo, method);
             break;
         case PUT:
-            method = new PutMethod(requestInfo.getUrl());
+            method = new PutMethod(requestInfo.getURL());
             setEntityContent(requestInfo, method);
             break;
         case DELETE:
-            method = new DeleteMethod(requestInfo.getUrl());
+            method = new DeleteMethod(requestInfo.getURL());
             break;
         case HEAD:
-            method = new HeadMethod(requestInfo.getUrl());
+            method = new HeadMethod(requestInfo.getURL());
             break;
         default:
             return null;
@@ -73,16 +72,9 @@ public class HTTPUtils {
 
     private static void setEntityContent(final MockRequest requestInfo,
             HttpMethodBase method) throws UnsupportedEncodingException {
-        if (requestInfo.getContent() instanceof byte[]) {
-            ((EntityEnclosingMethod) method)
-                    .setRequestEntity(new ByteArrayRequestEntity(
-                            (byte[]) requestInfo.getContent(),
-                            requestInfo.getContentType()));
-        } else if (requestInfo.getContent() instanceof String) {
-            ((EntityEnclosingMethod) method).setRequestEntity(
-                    new StringRequestEntity((String) requestInfo.getContent(),
-                            requestInfo.getContentType(), "UTF-8"));
-        }
+        ((EntityEnclosingMethod) method).setRequestEntity(
+                new StringRequestEntity((String) requestInfo.getContent(),
+                        requestInfo.getContentType(), "UTF-8"));
     }
 
     private MockResponse execute(final HttpMethodBase method,
@@ -115,7 +107,7 @@ public class HTTPUtils {
                     : null;
 
             return new MockResponse(sc, contentType, toResponseHeaders(method),
-                    new String(data, "utf-8"), requestInfo.getConfig());
+                    new String(data, "utf-8"));
         } finally {
             try {
                 method.releaseConnection();

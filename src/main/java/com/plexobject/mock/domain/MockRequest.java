@@ -1,85 +1,99 @@
 package com.plexobject.mock.domain;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.thymeleaf.util.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableSet;
+import com.plexobject.mock.server.MockService;
 import com.plexobject.mock.util.FileUtils;
 
+/**
+ * This class defines incoming requests
+ * 
+ * @author shahzad bhatti
+ *
+ */
 public class MockRequest {
-    private static final String STORE_PREFIX = "__store__";
-    private static final String MOCK_USE_HASH = "mockUseHash";
-    private static final String MOCK_MODE = "mockMode";
-    private static final String REQUEST_ID = "requestId";
-    private static final String MOCK_WAIT_TIME_MILLIS = "mockWaitTimeMillis";
-    private static final String MOCK_RESPONSE_CODE = "mockResponseCode";
-    private static final String EXPORT_FORMAT = "exportFormat";
-    //
-    private static final String XMOCK_MODE = "XMockMode";
-    private static final String XEXPORT_FORMAT = "XExportFormat";
-    private static final String XREQUEST_ID = "XRequestId";
-    private static final String XMOCK_WAIT_TIME_MILLIS = "XMockWaitTimeMillis";
-    private static final String XMOCK_RESPONSE_CODE = "XMockResponseCode";
-    private static final Set<String> SKIP_HEADERS = new HashSet<>(
-            Arrays.asList("Accept-Encoding", "Upgrade-Insecure-Requests",
-                    "Upgrade: websocket", "Sec-WebSocket-Version",
-                    "Sec-WebSocket-Key", "Sec-WebSocket-Extensions"));
-    private final boolean useHash;
-    private final String requestId;
+    private static final Set<String> SKIP_HEADERS = ImmutableSet.of(
+            "Accept-Encoding", "Upgrade-Insecure-Requests",
+            "Upgrade: websocket", "Sec-WebSocket-Version", "Sec-WebSocket-Key",
+            "Sec-WebSocket-Extensions");
+
+    private static final Set<String> SKIP_FIELDS = ImmutableSet.of(
+            Constants.MOCK_REQUEST_ID, Constants.MOCK_METHOD,
+            Constants.MOCK_WAIT_TIME_MILLIS, Constants.MOCK_RESPONSE_CODE,
+            Constants.MOCK_EXPORT_FORMAT);
+
     private final String url;
+    private final MethodType method;
+    private final String requestId;
+    private final String hash;
     private final String contentType;
     private final Map<String, String> headers;
     private final Map<String, String> params;
-    private final Object content;
+    private final String content;
     private final int mockWaitTimeMillis;
     private final int mockResponseCode;
     private final MockMode mockMode;
     private final Configuration config;
     private final ExportFormat exportFormat;
-    private final boolean storeRequest;
+
+    public MockRequest(Configuration config, String url, MethodType method,
+            Map<String, String> headers, Map<String, String> params,
+            String content) {
+        this.config = config;
+        this.url = url;
+        this.method = method;
+        this.headers = headers;
+        this.params = params;
+        this.contentType = Constants.JSON_CONTENT;
+        this.content = content;
+        requestId = "";
+        mockMode = MockMode.PLAY;
+        hash = "";
+        mockWaitTimeMillis = 0;
+        mockResponseCode = 200;
+        exportFormat = ExportFormat.JSON;
+    }
 
     public MockRequest(final HttpServletRequest req, Configuration config)
-            throws IOException {
+            throws IOException, ServletException {
         this.config = config;
-        String path = getPath(req);
-        if (path.startsWith(STORE_PREFIX)) {
-            storeRequest = true;
-            path = path.substring(STORE_PREFIX.length());
-        } else {
-            storeRequest = false;
-        }
-
-        url = config.getTargetURL() + path;
+        url = config.getTargetURL() + getPath(req);
+        method = MockService.getMethod(req);
         contentType = req.getContentType();
         headers = toHeaders(req);
         params = toParams(req);
-        useHash = "true".equals(params.get(MOCK_USE_HASH));
-        byte[] data = FileUtils.read(req.getInputStream());
-        content = data.length > 0 && isAPIContentType() ? new String(data)
-                : data;
-        requestId = getRequestId(req, path, req.getParameterMap(), null);
-        mockWaitTimeMillis = getInteger(req, MOCK_WAIT_TIME_MILLIS,
-                XMOCK_WAIT_TIME_MILLIS);
-        mockResponseCode = getInteger(req, MOCK_RESPONSE_CODE,
-                XMOCK_RESPONSE_CODE);
         exportFormat = getExportFormat(req, config.getDefaultExportFormat());
         mockMode = getMockMode(req, config);
+        InputStream in = req.getInputStream();
+        byte[] data = FileUtils.read(in);
+        content = new String(data, "utf-8");
+
+        requestId = getRequestId(req);
+        hash = getHash(req.getParameterMap(), content, mockMode);
+        mockWaitTimeMillis = getInteger(req, Constants.MOCK_WAIT_TIME_MILLIS,
+                Constants.XMOCK_WAIT_TIME_MILLIS);
+        mockResponseCode = getInteger(req, Constants.MOCK_RESPONSE_CODE,
+                Constants.XMOCK_RESPONSE_CODE);
     }
 
     @JsonIgnore
     public boolean isAPIContentType() {
         return contentType == null
-                || (contentType.startsWith("application/json")
-                        || contentType
-                                .startsWith("application/x-www-form-urlencoded")
-                        || contentType.startsWith("multipart/form-data"));
+                || (contentType.startsWith(Constants.JSON_CONTENT)
+                        || contentType.startsWith(Constants.FORM_CONTENT)
+                        || contentType.startsWith(Constants.MULTIPART_CONTENT));
     }
 
     @JsonIgnore
@@ -108,7 +122,7 @@ public class MockRequest {
     }
 
     @JsonIgnore
-    public String getUrl() {
+    public String getURL() {
         return url;
     }
 
@@ -124,35 +138,29 @@ public class MockRequest {
         return params;
     }
 
-    public Object getContent() {
+    public String getContent() {
         return content;
     }
 
-    @Override
-    @JsonIgnore
-    public String toString() {
-        StringBuilder sb = new StringBuilder(url + ", Content-Type="
-                + contentType + ", ID=" + requestId + "\n");
-        if (params != null) {
-            sb.append("\tParams: " + params + "\n");
-        }
-        if (content != null) {
-            int len = 0;
-            if (content instanceof byte[]) {
-                len = ((byte[]) content).length;
-                sb.append("\tBinary Content Len: " + len + "\n");
-            } else if (content instanceof CharSequence) {
-                len = ((CharSequence) content).length();
-                sb.append("\tContent: " + len + ">" + content + "\n");
-            }
-        }
-        return sb.toString();
+    public ExportFormat getExportFormat() {
+        return exportFormat;
     }
 
-    private static String getPath(HttpServletRequest req) {
-        return req.getQueryString() == null ? req.getRequestURI()
-                : req.getRequestURI() + "?" + req.getQueryString();
+    public String getHash() {
+        return hash;
     }
+
+    @JsonIgnore
+    @Override
+    public String toString() {
+        return "MockRequest [url=" + url + ", method=" + method + ", requestId="
+                + requestId + ", hash=" + hash + ", contentType=" + contentType
+                + ", headers=" + headers + ", params=" + params
+                + ", mockResponseCode=" + mockResponseCode + ", mockMode="
+                + mockMode + ", exportFormat=" + exportFormat + "]";
+    }
+
+    //////////////////// PRIVATE METHODS //////////////////
 
     private static String getValue(HttpServletRequest req, String paramKey,
             String headerKey, String defValue) {
@@ -166,31 +174,31 @@ public class MockRequest {
         return value;
     }
 
+    private static String getPath(HttpServletRequest req) {
+        return req.getQueryString() == null ? req.getRequestURI()
+                : req.getRequestURI() + "?" + req.getQueryString();
+    }
+
     private static MockMode getMockMode(HttpServletRequest req,
             Configuration config) {
-        String reqMode = getValue(req, MOCK_MODE, XMOCK_MODE,
-                config.getMockMode().name()).toUpperCase();
+        String reqMode = getValue(req, Constants.MOCK_MODE,
+                Constants.XMOCK_MODE, config.getMockMode().name())
+                        .toUpperCase();
         return MockMode.valueOf(reqMode);
     }
 
-    private String getRequestId(HttpServletRequest req, final String path,
-            Map<java.lang.String, java.lang.String[]> params, String body) {
-        String id = getValue(req, REQUEST_ID, XREQUEST_ID, "");
-        if (useHash) {
-            id = getIdByHash(params, body);
-        }
-        return path + id;
+    private String getRequestId(HttpServletRequest req) {
+        return getValue(req, Constants.MOCK_REQUEST_ID,
+                Constants.XMOCK_REQUEST_ID, "");
     }
 
-    private static String getIdByHash(
-            Map<java.lang.String, java.lang.String[]> params, String body) {
-        String id;
-        if (body != null) {
-            id = FileUtils.hash(body);
+    private static String getHash(Map<String, String[]> params, String body,
+            MockMode mockMode) {
+        if (!StringUtils.isEmpty(body) && mockMode != MockMode.STORE) {
+            return FileUtils.hash(body);
         } else {
-            id = toKey(params);
+            return toKey(params);
         }
-        return id;
     }
 
     private Map<String, String> toHeaders(final HttpServletRequest req) {
@@ -207,16 +215,16 @@ public class MockRequest {
         return headers;
     }
 
-    private static final String toKey(
-            final Map<java.lang.String, java.lang.String[]> params) {
+    private static final String toKey(final Map<String, String[]> params) {
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String[]> e : params.entrySet()) {
             for (String v : e.getValue()) {
-                if (e.getKey() != null && v != null) {
+                if (!SKIP_FIELDS.contains(e.getKey()) && v != null) {
                     sb.append(e.getKey().trim() + ":" + v.trim());
                 }
             }
         }
+
         return FileUtils.hash(sb.toString());
     }
 
@@ -228,13 +236,10 @@ public class MockRequest {
 
     private static ExportFormat getExportFormat(HttpServletRequest req,
             ExportFormat defaultExportFormat) {
-        String value = getValue(req, EXPORT_FORMAT, XEXPORT_FORMAT,
-                defaultExportFormat.name());
+        String value = getValue(req, Constants.MOCK_EXPORT_FORMAT,
+                Constants.XMOCK_EXPORT_FORMAT, defaultExportFormat.name())
+                        .toUpperCase();
         return ExportFormat.valueOf(value);
-    }
-
-    public boolean isStoreRequest() {
-        return storeRequest;
     }
 
     private static Map<String, String> toParams(final HttpServletRequest req) {
@@ -242,14 +247,15 @@ public class MockRequest {
         Set<Map.Entry<String, String[]>> entries = (Set<Map.Entry<String, String[]>>) req
                 .getParameterMap().entrySet();
         for (Map.Entry<String, String[]> e : entries) {
-            if (e.getValue().length > 0) {
+            if (!SKIP_FIELDS.contains(e.getKey()) && e.getValue().length > 0) {
                 params.put(e.getKey(), e.getValue()[0]);
             }
         }
         return params;
     }
 
-    public ExportFormat getExportFormat() {
-        return exportFormat;
+    public MethodType getMethod() {
+        return method;
     }
+
 }

@@ -1,6 +1,5 @@
 package com.plexobject.mock.util;
 
-import java.io.File;
 import java.io.StringWriter;
 import java.util.Map;
 
@@ -9,9 +8,11 @@ import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
 
+import com.plexobject.mock.domain.Configuration;
+import com.plexobject.mock.domain.MockData;
 import com.plexobject.mock.domain.MockRequest;
 
-public class ThymeleafUtils {
+public class ThymeleafUtils implements TemplateTransformer {
     static class ParamsContext extends AbstractContext {
     }
 
@@ -27,26 +28,29 @@ public class ThymeleafUtils {
         templateEngine.setTemplateResolver(templateResolver);
     }
 
-    public String transform(File file, MockRequest requestInfo) {
+    @Override
+    public String transform(String file, Configuration config, MockRequest requestInfo) {
         ParamsContext ctx = new ParamsContext();
         ctx.setVariable("params", requestInfo.getParams());
         ctx.setVariable("headers", requestInfo.getHeaders());
-        ctx.setVariable("url", requestInfo.getUrl());
-        for (Map.Entry<java.lang.String, java.lang.String> e : requestInfo.getHeaders().entrySet()) {
+        ctx.setVariable("url", requestInfo.getURL());
+        ctx.setVariable("helper", new MockData(config));
+        for (Map.Entry<java.lang.String, java.lang.String> e : requestInfo
+                .getHeaders().entrySet()) {
             if (e.getValue().length() > 0) {
                 ctx.setVariable(e.getKey(), e.getValue());
             }
         }
 
-        for (Map.Entry<java.lang.String, java.lang.String> e : requestInfo.getParams().entrySet()) {
+        for (Map.Entry<java.lang.String, java.lang.String> e : requestInfo
+                .getParams().entrySet()) {
             if (e.getValue() != null) {
                 ctx.setVariable(e.getKey(), e.getValue());
             }
         }
 
         StringWriter sw = new StringWriter();
-        templateEngine.process(file.getAbsolutePath(), ctx, sw);
-        System.out.println("\n\n " + sw + "\n\n");
+        templateEngine.process(file, ctx, sw);
         return sw.toString();
     }
 

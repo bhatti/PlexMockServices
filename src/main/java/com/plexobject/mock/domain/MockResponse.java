@@ -1,55 +1,43 @@
 package com.plexobject.mock.domain;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.plexobject.mock.util.FileUtils;
+import com.google.common.base.Preconditions;
 import com.plexobject.mock.util.JSONUtils;
 
+/**
+ * This class defines outgoing response
+ * 
+ * @author shahzad bhatti
+ *
+ */
 public class MockResponse implements SerializationLifecycle {
     private transient int responseCode;
     private Map<String, String> headers;
     private String contentType;
-    private String contentClass;
-    private Object contents;
-    private Configuration config;
+    private String contents;
 
     public MockResponse() {
     }
 
     public MockResponse(int responseCode, String contentType,
-            Map<String, String> headers, Object contents,
-            Configuration config) {
+            Map<String, String> headers, Object contents) throws IOException {
+        Preconditions.checkNotNull(contentType, "contentType is not defined");
+        Preconditions.checkNotNull(contents, "contents is not defined");
+        Preconditions.checkNotNull(headers, "headers is not defined");
         this.responseCode = responseCode;
         this.contentType = contentType;
         this.headers = headers;
-        this.contents = contents;
-        this.config = config;
-    }
-
-    public static MockResponse from(HttpServletRequest req) throws IOException {
-        InputStream in = req.getInputStream();
-        byte[] data = null;
-        if (in != null) {
-            data = FileUtils.read(in);
-        } else {
-            data = new byte[0];
-        }
-        in.close();
-        MockResponse resp = JSONUtils.unmarshal(new String(data),
-                MockResponse.class);
-        return resp;
+        setContents(contents);
     }
 
     @JsonIgnore
     public boolean isAPIContentType() {
         return contentType != null
-                && contentType.startsWith("application/json");
+                && contentType.startsWith(Constants.JSON_CONTENT);
     }
 
     @JsonIgnore
@@ -65,12 +53,15 @@ public class MockResponse implements SerializationLifecycle {
         this.responseCode = responseCode;
     }
 
-    public Object getContents() {
+    public String getContents() {
         return contents;
     }
 
-    public void setContents(Object contents) {
-        this.contents = contents;
+    public void setContents(Object contents) throws IOException {
+        if (contents instanceof String == false) {
+            contents = JSONUtils.marshal(contents);
+        }
+        this.contents = (String) contents;
     }
 
     public String getContentType() {
@@ -85,36 +76,26 @@ public class MockResponse implements SerializationLifecycle {
         return headers;
     }
 
-    public String getContentClass() {
-        return contentClass;
-    }
-
-    public void setContentClass(String contentClass) {
-        this.contentClass = contentClass;
-    }
-
     public void setHeaders(Map<String, String> headers) {
         this.headers = headers;
     }
 
     @Override
-    public void beforeSerialize() throws IOException {
-        if (isAPIContentType() && getContents() instanceof byte[]
+    public void beforeSerialize(Configuration config) throws IOException {
+        if (isAPIContentType() && getContents() instanceof String
                 && config.isUnserializeJsonContentBeforeSave()) {
-            String json = new String((byte[]) getContents());
-            if (json.startsWith("{")) {
-                setContentClass(Map.class.getName());
-                setContents(JSONUtils.unmarshal(json, Map.class));
-            } else if (json.startsWith("[")) {
-                setContentClass(List.class.getName());
-                setContents(JSONUtils.unmarshal(json, List.class));
+            if (contents.startsWith("{")) {
+                setContents(JSONUtils.unmarshal(contents, Map.class));
+            } else if (contents.startsWith("[")) {
+                setContents(JSONUtils.unmarshal(contents, List.class));
             }
         }
     }
 
     @Override
-    public void afterDeserialize() throws IOException {
-        if (getContentClass() != null && getContents() != null) {
+    public void afterDeserialize(Configuration config) throws IOException {
+        if (getContents() != null
+                && config.isUnserializeJsonContentBeforeSave()) {
             String json = JSONUtils.marshal(getContents());
             setContents(json);
         }
