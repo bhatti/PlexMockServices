@@ -6,9 +6,8 @@ PlexMockServices offers a mock service for proxying into REST SERVICES and saves
 - Record API response in easy to manage YAML/JSON files 
 - Playback YAML/JSON stored responses 
 - Store YAML/JSON stored responses 
-- Store data files for random responses
-- Support for sequential or random responses when there are multiple response
-  files for a given request.
+- Support mock data for generating random data and using files for random responses
+- Support random responses when there are multiple response files for a given request.
 - Define dynamic responses using Velocity or Thymeleaf templates so that you can return responses based on the request parameters or other factors.
 - Inject random failures and delays 
 - Specify response codes/delays in the request 
@@ -44,13 +43,6 @@ git clone git@github.com:bhatti/PlexMockServices.git
             defaultExportFormat=YAML
 ```
 Note: You can specify YAML, JSON, Velocity or Thymeleaf format.
-
-- Specify order of response
-```xml
-            randomResponseOrder=true
-```
-If randomResponseOrder is true then mock server will send random response, otherwise it will send in the order they were recorded. 
-Note: The order is not preserved between restarts of the server.
 
 - Add random failures/wait times
 ```xml

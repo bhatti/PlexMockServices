@@ -8,13 +8,11 @@
     "Devices": [
 [# th:each="i : ${#numbers.sequence(1,pageSize)}"]
       {
-	  "EasIds": {},
 	  "Udid": "[(${helper.uuid('105a997e', i)})]",
 	  "SerialNumber": "[(${helper.uuid()})]",
 	  "MacAddress": "[(${helper.uuid()})]",
 	  "Imei": "[(${helper.uuid()})]",
 	  "AssetNumber": "[(${helper.uuid()})]",
-      "EasId": "",
       "DeviceFriendlyName": "Device [(${helper.androidModel()})] for [(${helper.name()})] [(${i})]",
       "LocationGroupId": {
         "Id": {
@@ -81,13 +79,11 @@
       },
 [/]
       {
-	  "EasIds": {},
 	  "Udid": "[(${helper.uuid('105a997e', 100000)})]",
 	  "SerialNumber": "[(${helper.uuid()})]",
 	  "MacAddress": "[(${helper.uuid()})]",
 	  "Imei": "[(${helper.uuid()})]",
 	  "AssetNumber": "[(${helper.uuid()})]",
-      "EasId": "",
       "DeviceFriendlyName": "Last Device [(${helper.androidModel()})] for [(${helper.name()})]",
       "LocationGroupId": {
         "Id": {
