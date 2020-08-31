@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.thymeleaf.util.StringUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.plexobject.mock.domain.Configuration;
@@ -32,8 +33,6 @@ import com.plexobject.mock.util.HTTPUtils;
  *
  */
 public class MockHandler extends AbstractHandler {
-    private static final String X_MOCK_FILE_PATH = "XMockFilePath";
-
     private static final Logger logger = Logger.getLogger(MockHandler.class);
 
     private Configuration config;
@@ -206,7 +205,11 @@ public class MockHandler extends AbstractHandler {
 
         MockResponse resp = requestInfo.getExportFormat().read(path,
                 MockResponse.class, requestInfo, config);
-        resp.getHeaders().put(X_MOCK_FILE_PATH, path.getName());
+        resp.getHeaders().put(Constants.XMOCK_FILE_PATH, path.getAbsolutePath());
+        resp.getHeaders().put(Constants.XMOCK_HASH, requestInfo.getHash());
+        if (!StringUtils.isEmpty(requestInfo.getRequestId())) {
+            resp.getHeaders().put(Constants.XMOCK_REQUEST_ID, requestInfo.getRequestId());
+        }
         return resp;
     }
 

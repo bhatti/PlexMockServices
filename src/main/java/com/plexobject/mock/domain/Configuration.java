@@ -79,9 +79,9 @@ public class Configuration {
         Random random = new Random();
         File dir = normalizeDir(new URI(req.getURL()), getDataDir());
 
-        File[] files = findFiles(req, dir, true);
+        File[] files = findFiles(req, dir, false);
         if (files.length == 0) {
-            files = findFiles(req, dir, false);
+            files = findFiles(req, dir, true);
         }
         File file = files.length > 0 ? files[random.nextInt(files.length)]
                 : null;

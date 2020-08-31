@@ -19,6 +19,8 @@ public class Constants {
     public static final String MULTIPART_CONTENT = "multipart/form-data";
 
     //
+    public static final String XMOCK_FILE_PATH = "XMockFilePath";
+    public static final String XMOCK_HASH = "XMockHash";
     public static final String XMOCK_MODE = "XMockMode";
     public static final String XMOCK_EXPORT_FORMAT = "XMockExportFormat";
     public static final String XMOCK_REQUEST_ID = "XMockRequestId";

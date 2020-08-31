@@ -48,11 +48,9 @@ public enum ExportFormat {
         }
         switch (this) {
         case JSON:
-            JSONUtils.write(path, value);
-            break;
+            //JSONUtils.write(path, value);
         case YAML:
-            YAMLUtils.write(path, value);
-            break;
+            //YAMLUtils.write(path, value);
         case VELOCITY:
         case THYMELEAF:
         case TEXT:

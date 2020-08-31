@@ -50,6 +50,11 @@ public class JSONUtils {
     @SuppressWarnings("unchecked")
     public static <T> T read(File inputFile, Class<?> klass)
             throws IOException {
-        return (T) mapper.readValue(inputFile, klass);
+        try {
+            return (T) mapper.readValue(inputFile, klass);
+        } catch (JsonMappingException e) {
+            logger.warn("Failed to read " + inputFile, e);
+            throw e;
+        }
     }
 }
