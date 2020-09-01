@@ -14,6 +14,8 @@ public class Constants {
     public static final String MOCK_EXPORT_FORMAT = "mockExportFormat";
     public static final String MOCK_METHOD = "mockMethod";
 
+    public static final String TARGET_URL = "targetURL";
+
     public static final String JSON_CONTENT = "application/json";
     public static final String FORM_CONTENT = "application/x-www-form-urlencoded";
     public static final String MULTIPART_CONTENT = "multipart/form-data";

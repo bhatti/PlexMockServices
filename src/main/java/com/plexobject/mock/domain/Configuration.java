@@ -46,7 +46,8 @@ public class Configuration {
         minWaitTimeMillis = getInteger(props, "minWaitTimeMillis");
         maxWaitTimeMillis = getInteger(props, "maxWaitTimeMillis");
         mockMode = MockMode
-                .valueOf(getString(props, "mockMode", "RECORD").toUpperCase());
+                .valueOf(getString(props, "mockMode", MockMode.PLAY.name())
+                        .toUpperCase());
         saveRawRequestResponses = "true"
                 .equals(getString(props, "saveRawRequestResponses", "false"));
         saveAPIResponsesOnly = "true"
@@ -58,7 +59,7 @@ public class Configuration {
                 getString(props, "defaultExportFormat", "YAML").toUpperCase());
         dataDir.mkdirs();
 
-        targetURL = getUrlPrefix(props);
+        targetURL = getTargetURL(props);
 
         if (mockMode == MockMode.RECORD
                 && (targetURL == null || targetURL.length() == 0)) {
@@ -209,17 +210,16 @@ public class Configuration {
         return System.getProperty(name, props.getProperty(name, defValue));
     }
 
-    private static String getUrlPrefix(Properties props) {
-        String urlPrefix = getString(props, "urlPrefix", "");
-        if (!urlPrefix.startsWith("http://")
-                && !urlPrefix.startsWith("https://")) {
+    private static String getTargetURL(Properties props) {
+        String url = getString(props, Constants.TARGET_URL, "");
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
             throw new RuntimeException(
-                    "Invalid mock.target.url property '" + urlPrefix + "'");
+                    "Invalid mock.target.url property '" + url + "'");
         }
-        if (urlPrefix.endsWith("/")) {
-            urlPrefix = urlPrefix.substring(0, urlPrefix.length() - 1);
+        if (url.endsWith("/")) {
+            url = url.substring(0, url.length() - 1);
         }
-        return urlPrefix;
+        return url;
     }
 
     private static int getInteger(Properties props, String name) {

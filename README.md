@@ -35,7 +35,7 @@ git clone git@github.com:bhatti/PlexMockServices.git
 - Edit src/main/resources/application.properties
 * Specify default mockMode
 ```xml
-            mockMode=RECORD
+            mockMode=PLAY
 ```
 
 - Specify format of export files:
@@ -58,7 +58,7 @@ You can configure minWaitTimeMillis and maxWaitTimeMillis for minimum/maximum wa
 
 - Specify target service base URL
 ```xml
-            urlPrefix=http://localhost:9000
+            targetURL=http://localhost:9000
 ```
 Note: It's recommended that you use deploy mock service as root context so mapping of service paths is simple.
 
@@ -111,6 +111,8 @@ curl -X POST "http://localhost:$port/lines?mockMethod=GET&mockExportFormat=TEXT"
 
 ### Specifying the id for request
    By default all requests are stored with a file name that is derived from all URL path and SHA1 of parameters/body. However, you can specify the key by passing parameter mockRequestId.
+
+Note: By default, GET requests use query params to match the mock data and POST requests match body to match the request. You can view `XMockFilePath` and `XMockHash` response headers to view matching file path and hash. 
 
 ### Specifying method for request
    By default method is derived from http request but you can specify mockMethod to overwrite it.
@@ -321,7 +323,7 @@ variables so that you can refer them in the template easily.
 You can run uplaod template file and use curl command such as: 
 ```bash
 curl -X POST "http://localhost:$port/API/mdm/devices/search?page=1&pageSize=10&mockMethod=GET&mockExportFormat=THYMELEAF" -H "XMockMode: store" -H 'Content-Type: application/json' -d @../fixtures/ios_devices.th
-curl "http://localhost:$port/API/mdm/devices/search?page=1&pageSize=10" -H "XMockMode: play" |jq '.'
+curl "http://localhost:$port/API/mdm/devices/search?page=1&pageSize=10" -H "XMockMode: play"
 ```
 
 ## Sample App
