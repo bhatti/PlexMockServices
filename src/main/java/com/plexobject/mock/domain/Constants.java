@@ -13,6 +13,7 @@ public class Constants {
     public static final String MOCK_RESPONSE_CODE = "mockResponseCode";
     public static final String MOCK_EXPORT_FORMAT = "mockExportFormat";
     public static final String MOCK_METHOD = "mockMethod";
+    public static final String MOCK_TARGET_URL = "mockTargetURL";
 
     public static final String TARGET_URL = "targetURL";
 
@@ -21,6 +22,7 @@ public class Constants {
     public static final String MULTIPART_CONTENT = "multipart/form-data";
 
     //
+    public static final String XMOCK_TARGET_URL = "XMockTargetURL";
     public static final String XMOCK_FILE_PATH = "XMockFilePath";
     public static final String XMOCK_HASH = "XMockHash";
     public static final String XMOCK_MODE = "XMockMode";

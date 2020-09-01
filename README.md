@@ -60,7 +60,7 @@ You can configure minWaitTimeMillis and maxWaitTimeMillis for minimum/maximum wa
 ```xml
             targetURL=http://localhost:9000
 ```
-Note: It's recommended that you use deploy mock service as root context so mapping of service paths is simple.
+You can also override `targetURL` using query parameter `mockTargetURL` or http header `XMockTargetURL`. Also, it's recommended that you use deploy mock service as root context so mapping of service paths is simple.
 
 ## Testing
 ### Start server

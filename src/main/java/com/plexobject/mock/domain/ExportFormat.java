@@ -46,20 +46,22 @@ public enum ExportFormat {
         if (value instanceof SerializationLifecycle) {
             ((SerializationLifecycle) value).beforeSerialize(config);
         }
-        switch (this) {
-        case JSON:
-            //JSONUtils.write(path, value);
-        case YAML:
-            //YAMLUtils.write(path, value);
-        case VELOCITY:
-        case THYMELEAF:
-        case TEXT:
-            if (value instanceof byte[]) {
-                FileUtils.write((byte[]) value, path);
-            } else if (value instanceof String) {
-                FileUtils.write(((String) value).getBytes(), path);
-            } else {
-                FileUtils.write(value.toString().getBytes(), path);
+        if (value instanceof byte[]) {
+            FileUtils.write((byte[]) value, path);
+        } else if (value instanceof String) {
+            FileUtils.write(((String) value).getBytes(), path);
+        } else {
+            switch (this) {
+            case JSON:
+                JSONUtils.write(path, value);
+                break;
+            case YAML:
+                YAMLUtils.write(path, value);
+                break;
+            case VELOCITY:
+            case THYMELEAF:
+            case TEXT:
+                throw new IOException("Unsupported type " + value);
             }
         }
     }

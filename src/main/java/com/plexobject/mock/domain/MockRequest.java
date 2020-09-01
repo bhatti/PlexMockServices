@@ -69,7 +69,7 @@ public class MockRequest {
     public MockRequest(final HttpServletRequest req, Configuration config)
             throws IOException, ServletException {
         this.config = config;
-        url = config.getTargetURL() + getPath(req);
+        url = getMockTargetURL(req, config.getTargetURL()) + getPath(req);
         method = MockService.getMethod(req);
         contentType = req.getContentType();
         headers = toHeaders(req);
@@ -190,6 +190,11 @@ public class MockRequest {
     private String getRequestId(HttpServletRequest req) {
         return getValue(req, Constants.MOCK_REQUEST_ID,
                 Constants.XMOCK_REQUEST_ID, "");
+    }
+
+    private String getMockTargetURL(HttpServletRequest req, String def) {
+        return getValue(req, Constants.MOCK_TARGET_URL,
+                Constants.XMOCK_TARGET_URL, def);
     }
 
     private static String getHash(Map<String, String[]> params, String body,
