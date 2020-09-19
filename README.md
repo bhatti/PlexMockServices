@@ -63,10 +63,20 @@ You can configure minWaitTimeMillis and maxWaitTimeMillis for minimum/maximum wa
 You can also override `targetURL` using query parameter `mockTargetURL` or http header `XMockTargetURL`. Also, it's recommended that you use deploy mock service as root context so mapping of service paths is simple.
 
 ## Testing
+
 ### Start server
+Using Docker
+```bash
+docker build -t mock-service .
+docker run -p 8000:8080 mock-service
+```
+
+Or using gradle directly, e.g.
 ```bash
 ./gradlew war run
 ```
+
+
 ### Record Mode
 ```bash
   curl -X POST http://localhost:8000/myservice?mockMode=RECORD -H 'Content-Type: application/json' -d {'json':true}
