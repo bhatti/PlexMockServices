@@ -15,6 +15,13 @@ import java.util.UUID;
 
 import com.plexobject.mock.util.FileUtils;
 
+/**
+ * This is a helper class for creating mock data
+ * 
+ * @author shahzad bhatti
+ *
+ */
+
 public class MockData {
     private static final String CONTENT_TYPE = "Content-Type:";
 

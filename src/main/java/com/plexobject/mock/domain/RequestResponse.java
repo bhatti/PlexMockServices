@@ -1,5 +1,11 @@
 package com.plexobject.mock.domain;
 
+/**
+ * This class abstracts request and response objects
+ * 
+ * @author shahzad bhatti
+ *
+ */
 public class RequestResponse {
     private final MockRequest request;
     private final MockResponse response;

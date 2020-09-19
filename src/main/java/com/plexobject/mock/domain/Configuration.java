@@ -21,6 +21,7 @@ import org.thymeleaf.util.StringUtils;
  * @author shahzad bhatti
  *
  */
+
 public class Configuration {
     private static final Logger logger = Logger.getLogger(Configuration.class);
 

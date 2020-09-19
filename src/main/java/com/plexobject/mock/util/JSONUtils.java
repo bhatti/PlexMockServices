@@ -9,6 +9,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * This is a helper class for JSON serialization
+ * 
+ * @author shahzad bhatti
+ *
+ */
 public class JSONUtils {
     private static final Logger logger = Logger.getLogger(JSONUtils.class);
 

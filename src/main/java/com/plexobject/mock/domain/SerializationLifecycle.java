@@ -8,6 +8,7 @@ import java.io.IOException;
  * @author shahzad bhatti
  *
  */
+
 public interface SerializationLifecycle {
 
     void beforeSerialize(Configuration config) throws IOException;

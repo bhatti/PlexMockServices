@@ -20,6 +20,11 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+/**
+ * This is a helper class for IO operations
+ * @author shahzad bhatti
+ *
+ */
 public class FileUtils {
     private static final Logger LOGGER = Logger.getLogger(FileUtils.class);
 

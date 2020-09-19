@@ -6,6 +6,7 @@ package com.plexobject.mock.domain;
  * @author shahzad bhatti
  *
  */
+
 public enum MockMode {
     RECORD, PLAY, STORE, PASS
 }

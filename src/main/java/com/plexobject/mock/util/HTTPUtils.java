@@ -25,6 +25,13 @@ import com.plexobject.mock.domain.MethodType;
 import com.plexobject.mock.domain.MockRequest;
 import com.plexobject.mock.domain.MockResponse;
 
+/**
+ * This is a helper class for http operations
+ * 
+ * @author shahzad bhatti
+ *
+ */
+
 public class HTTPUtils {
     private static final String CONTENT_TYPE = "Content-Type";
     private final HttpClient httpClient;

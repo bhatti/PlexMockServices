@@ -6,6 +6,7 @@ package com.plexobject.mock.domain;
  * @author shahzad bhatti
  *
  */
+
 public class Constants {
     public static final String MOCK_MODE = "mockMode";
     public static final String MOCK_REQUEST_ID = "mockRequestId";

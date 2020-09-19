@@ -12,6 +12,13 @@ import com.plexobject.mock.domain.Configuration;
 import com.plexobject.mock.domain.MockData;
 import com.plexobject.mock.domain.MockRequest;
 
+/**
+ * This class abstracts Velocity templating engine
+ * 
+ * @author shahzad bhatti
+ *
+ */
+
 public class VelocityUtils implements TemplateTransformer {
     private final VelocityEngine ve;
 

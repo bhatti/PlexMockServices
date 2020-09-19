@@ -14,6 +14,7 @@ import com.plexobject.mock.util.JSONUtils;
  * @author shahzad bhatti
  *
  */
+
 public class MockResponse implements SerializationLifecycle {
     private transient int responseCode;
     private Map<String, String> headers;

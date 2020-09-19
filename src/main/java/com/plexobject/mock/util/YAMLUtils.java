@@ -7,6 +7,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+/**
+ * This class provides serializatio support using YAML format
+ * 
+ * @author shahzad bhatti
+ *
+ */
+
 public class YAMLUtils {
     private static ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 

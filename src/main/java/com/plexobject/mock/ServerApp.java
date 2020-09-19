@@ -5,6 +5,12 @@ import org.eclipse.jetty.server.Server;
 
 import com.plexobject.mock.server.MockHandler;
 
+/**
+ * This class starts embedded http server
+ * 
+ * @author shahzad bhatti
+ *
+ */
 public class ServerApp {
     private static final Logger logger = Logger.getLogger(ServerApp.class);
 

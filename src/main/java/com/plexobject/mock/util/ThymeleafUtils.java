@@ -12,6 +12,13 @@ import com.plexobject.mock.domain.Configuration;
 import com.plexobject.mock.domain.MockData;
 import com.plexobject.mock.domain.MockRequest;
 
+/**
+ * This class uses Thymeleaf library for template output response
+ * 
+ * @author shahzad bhatti
+ *
+ */
+
 public class ThymeleafUtils implements TemplateTransformer {
     static class ParamsContext extends AbstractContext {
     }
@@ -29,7 +36,8 @@ public class ThymeleafUtils implements TemplateTransformer {
     }
 
     @Override
-    public String transform(String file, Configuration config, MockRequest requestInfo) {
+    public String transform(String file, Configuration config,
+            MockRequest requestInfo) {
         ParamsContext ctx = new ParamsContext();
         ctx.setVariable("params", requestInfo.getParams());
         ctx.setVariable("headers", requestInfo.getHeaders());

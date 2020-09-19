@@ -80,6 +80,7 @@ public class TemplateTransformerTest {
         Assert.assertEquals(11, list.size());
     }
 
+    // helper method to copy file
     private static void copy(File source, File dest) throws IOException {
         InputStream is = null;
         OutputStream os = null;
