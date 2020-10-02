@@ -118,7 +118,23 @@ public class MockData {
         this.config = config;
     }
 
+    public int readLineInt(String name) throws IOException {
+        return readLineInt(name, 0);
+    }
+
+    public int readLineInt(String name, long seed) throws IOException {
+        String line = readLine(name, seed);
+        if (line == null) {
+            return 0;
+        }
+        return Integer.parseInt(line);
+    }
+
     public String readLine(String name) throws IOException {
+        return readLine(name, 0);
+    }
+
+    public String readLine(String name, long seed) throws IOException {
         synchronized (name.intern()) {
             List<String> lines = textFiles.get(name);
             if (lines == null) {
@@ -143,6 +159,9 @@ public class MockData {
                 throw new IOException("Empty file fo " + name);
             }
             Random random = new Random();
+            if (seed > 0) {
+                random.setSeed(seed);
+            }
             return lines.get(random.nextInt(lines.size()));
         }
     }
@@ -166,7 +185,14 @@ public class MockData {
     }
 
     public String name() {
+        return name(0);
+    }
+
+    public String name(long seed) {
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
         return NAMES[random.nextInt(NAMES.length)];
     }
 
@@ -182,40 +208,88 @@ public class MockData {
     }
 
     public boolean bool() {
+        return bool(0);
+    }
+    public boolean bool(long seed) {
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
         return BOOLEANS[random.nextInt(BOOLEANS.length)];
     }
 
     public String androidModel() {
+        return androidModel(0);
+    }
+
+    public String androidModel(long seed) {
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
         return ANDROID_MODELS[random.nextInt(ANDROID_MODELS.length)];
     }
 
     public String iosModel() {
+        return iosModel(0);
+    }
+
+    public String iosModel(long seed) {
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
         return IOS_MODELS[random.nextInt(IOS_MODELS.length)];
     }
 
     public String androidVersion() {
+        return androidVersion(0);
+    }
+
+    public String androidVersion(long seed) {
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
         return ANDROID_VERSIONS[random.nextInt(ANDROID_VERSIONS.length)];
     }
 
     public String iosVersion() {
+        return iosVersion(0);
+    }
+
+    public String iosVersion(long seed) {
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
         return IOS_VERSIONS[random.nextInt(IOS_VERSIONS.length)];
     }
 
     public String email() {
+        return email(0);
+    }
+
+    public String email(long seed) {
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
         String domain = DOMAINS[random.nextInt(DOMAINS.length)];
         return string(20) + domain;
     }
 
     public String string(int length) {
+        return string(length, 0);
+    }
+
+    public String string(int length, long seed) {
         int leftLimit = 48; // numeral '0'
         int rightLimit = 122; // letter 'z'
         Random random = new Random();
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
 
         return random.ints(leftLimit, rightLimit + 1)
                 .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
@@ -225,13 +299,15 @@ public class MockData {
     }
 
     public String city(int max) {
-        Random random = new Random();
-        return CITIES[random.nextInt(Math.min(max, CITIES.length))];
+        return city(max, 0);
     }
 
-    public String city() {
+    public String city(int max, long seed) {
         Random random = new Random();
-        return CITIES[random.nextInt(CITIES.length)];
+        if (seed > 0) {
+            random.setSeed(seed);
+        }
+        return CITIES[random.nextInt(Math.min(max, CITIES.length))];
     }
 
     public String dollars() {
