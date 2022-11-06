@@ -1,4 +1,4 @@
-# PlexMockServices - Mocking REST SERVICES 
+# @Deprecated (use https://github.com/bhatti/api-mock-service instead) - PlexMockServices - Mocking REST SERVICES 
 
 PlexMockServices offers a mock service for proxying into REST SERVICES and saves responses. You can then playback those services using recorded/canned results. You can also interject random failures and delays and thus test robustness of your client side connection.
 
